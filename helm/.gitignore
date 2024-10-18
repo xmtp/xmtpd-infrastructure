@@ -1,0 +1,3 @@
+# Ignore config/templating files
+/*.yaml
+/*.yml
