@@ -27,6 +27,7 @@ variable "memory" {
 
 variable "env" {
   description = "Environment"
+  default     = "testnet"
 }
 
 variable "docker_image" {
