@@ -5,19 +5,6 @@ locals {
   health_check_path = "/health"
 }
 
-/*
-* TODO:
-* - How do we test this thing?
-*    - terraform fmt, terraform init+validate, terraform plan, terraform apply, terraform destroy
-*    - Set up CI
-*    - terraform apply onto an AWS instance
-* - AWS is required provider. Default tag can be set on the provider, so any AWS resource created will have that tag for the environment
-* - Need fargate_task_definition module -> get rid of data dog stuff, logs go to cloudwatch, don’t need docker hub access token
-* - Docker image can be specified as input variable, otherwise default to latest
-* - Do we need environment input variable? Default to 'testnet'
-* - Do we need service_discovery_namespace_name? -> use loadbalancer
-*/
-
 module "service_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "5.2.0"

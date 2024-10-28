@@ -27,6 +27,7 @@ variable "env" {
 
 variable "docker_image" {
   description = "Docker image for service"
+  default     = "ghcr.io/xmtp/mls-validation-service:latest"
 }
 
 variable "service_discovery_namespace_name" {
