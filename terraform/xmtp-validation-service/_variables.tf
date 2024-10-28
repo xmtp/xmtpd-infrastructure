@@ -10,11 +10,6 @@ variable "private_subnets" {
   description = "The (private) subnets used to run the service"
 }
 
-variable "datadog_api_key" {
-  description = "API Key for DataDog agent"
-  sensitive   = true
-}
-
 variable "cpu" {
   description = "Available CPU for the node container"
   default     = 2048

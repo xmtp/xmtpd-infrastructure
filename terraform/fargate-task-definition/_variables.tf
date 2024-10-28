@@ -51,11 +51,6 @@ variable "command" {
   type        = list(string)
 }
 
-variable "datadog_api_key" {
-  description = "DataDog API Key"
-  sensitive   = true
-}
-
 variable "env" {
   description = "Environment name"
 }
