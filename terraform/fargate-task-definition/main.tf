@@ -17,11 +17,7 @@ locals {
   secret_keys = nonsensitive(toset([for k, v in var.secrets : k]))
   efs_mounts  = toset(var.efs_mounts)
 
-  labels = merge(tomap({
-    "com.datadoghq.tags.service" = var.name,
-    "com.datadoghq.tags.env" = var.env, }),
-    var.docker_labels,
-  )
+  labels = var.docker_labels
 }
 
 resource "aws_ecs_task_definition" "task" {
@@ -63,18 +59,12 @@ resource "aws_ecs_task_definition" "task" {
         dockerLabels = local.labels
         command      = var.command
         logConfiguration = {
-          # https://docs.datadoghq.com/integrations/ecs_fargate/?tab=fluentbitandfirelens
-          logDriver = "awsfirelens"
+          logDriver = "awslogs"
           options = {
-            dd_message_key = "log"
-            apikey         = var.datadog_api_key
-            provider       = "ecs"
-            dd_service     = var.name
-            dd_source      = var.name
-            host           = "http-intake.logs.datadoghq.com"
-            dd_tags        = "env:${var.env},infra_provider:aws"
-            TLS            = "on"
-            Name           = "datadog"
+            awslogs-create-group  = "true"
+            awslogs-group         = "awslogs-${var.name}"
+            awslogs-region        = data.aws_region.current.name
+            awslogs-stream-prefix = "awslogs-${var.name}"
           }
         }
         environment = local.env_vars
@@ -83,16 +73,6 @@ resource "aws_ecs_task_definition" "task" {
           name      = name
           valueFrom = secret.arn
         }]
-        dependsOn = [
-          {
-            containerName = "datadog-agent"
-            condition     = "START"
-          },
-          {
-            containerName = "log_router"
-            condition     = "START"
-          }
-        ]
         portMappings = local.port_mappings
         # Default values that must be set to avoid re-creation
         cpu = 0
@@ -118,69 +98,7 @@ resource "aws_ecs_task_definition" "task" {
       var.health_check_config != null ? {
         healthCheck = var.health_check_config
       } : {}
-    ),
-    # This comes basically direct from DataDog's support
-    # https://docs.datadoghq.com/integrations/ecs_fargate/?tab=fluentbitandfirelens
-    {
-      name  = "log_router"
-      image = "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable"
-      fireLensConfiguration = {
-        type = "fluentbit",
-        options = {
-          enable-ecs-log-metadata = "true"
-          config-file-type        = "file"
-          config-file-value       = "/fluent-bit/configs/parse-json.conf"
-        }
-      }
-      logConfiguration = null
-      # Default values that must be set to avoid re-creation
-      cpu          = 0
-      environment  = []
-      essential    = true
-      mountPoints  = []
-      portMappings = []
-      user         = "0"
-      volumesFrom  = []
-    },
-    {
-      name      = "datadog-agent"
-      image     = "public.ecr.aws/datadog/agent:latest"
-      essential = true
-      portMappings = [
-        {
-          containerPort = 8125
-          hostPort      = 8125
-          protocol      = "udp"
-        },
-        {
-          containerPort = 8126
-          hostPort      = 8126
-          protocol      = "tcp"
-        }
-      ]
-      environment = [
-        {
-          name  = "DD_API_KEY"
-          value = var.datadog_api_key
-        },
-        {
-          name  = "DD_APM_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "DD_APM_NON_LOCAL_TRAFFIC"
-          value = "true"
-        },
-        {
-          name  = "ECS_FARGATE"
-          value = "true"
-        }
-      ]
-      # Default values that must be set to avoid re-creation
-      cpu         = 0
-      mountPoints = []
-      volumesFrom = []
-    }
+    )
   ])
 }
 
@@ -212,6 +130,8 @@ resource "aws_secretsmanager_secret_version" "dockerhub_credentials" {
     password = var.dockerhub_token
   })
 }
+
+data "aws_region" "current" {}
 
 # Allow the ECS agent to assume the role created below
 data "aws_iam_policy_document" "task_role_assume_policy" {
@@ -246,6 +166,24 @@ data "aws_iam_policy_document" "secrets_policy" {
       [for k, v in aws_secretsmanager_secret.secrets : v.arn],
       aws_secretsmanager_secret.dockerhub_credentials[*].arn
     )
+  }
+}
+
+resource "aws_iam_role_policy" "logs_policy" {
+  name_prefix = var.name
+  policy      = data.aws_iam_policy_document.logs_policy.json
+  role        = aws_iam_role.execution_role.id
+}
+
+data "aws_iam_policy_document" "logs_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["arn:aws:logs:*:*:*"]
   }
 }
 

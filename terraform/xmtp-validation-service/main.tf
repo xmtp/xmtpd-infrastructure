@@ -48,7 +48,7 @@ module "service_sg" {
 }
 
 module "task_definition" {
-  source = "../fargate_task_definition"
+  source = "../fargate-task-definition"
   name   = local.name
   cpu    = var.cpu
   memory = var.memory
