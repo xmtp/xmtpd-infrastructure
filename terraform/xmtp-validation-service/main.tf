@@ -58,12 +58,10 @@ module "task_definition" {
 
   secrets = { for key, val in var.chain_rpc_urls : upper(key) => val }
 
-  ports              = [local.service_port, local.health_check_port]
-  image              = var.docker_image
-  datadog_api_key    = var.datadog_api_key
-  env                = var.env
-  dockerhub_username = ""
-  dockerhub_token    = ""
+  ports           = [local.service_port, local.health_check_port]
+  image           = var.docker_image
+  datadog_api_key = var.datadog_api_key
+  env             = var.env
   health_check_config = {
     # CMD-SHELL tells ECS to use the container's default shell to run the command
     # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_HealthCheck.html

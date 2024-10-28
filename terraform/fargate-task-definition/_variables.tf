@@ -60,17 +60,6 @@ variable "env" {
   description = "Environment name"
 }
 
-variable "dockerhub_username" {
-  default = ""
-}
-
-// These are account access tokens found in https://hub.docker.com/settings/security
-// This should not be the account password.
-variable "dockerhub_token" {
-  sensitive = true
-  default   = ""
-}
-
 variable "additional_task_role_statements" {
   type = list(object({
     Effect   = string

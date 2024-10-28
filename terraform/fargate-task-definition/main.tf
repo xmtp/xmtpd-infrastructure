@@ -35,8 +35,7 @@ resource "aws_ecs_task_definition" "task" {
   task_role_arn      = aws_iam_role.task_role.arn
 
   depends_on = [
-    aws_secretsmanager_secret_version.secrets,
-    aws_secretsmanager_secret_version.dockerhub_credentials
+    aws_secretsmanager_secret_version.secrets
   ]
 
   dynamic "volume" {
@@ -90,11 +89,6 @@ resource "aws_ecs_task_definition" "task" {
           }
         ]
       },
-      var.dockerhub_username == "" || var.dockerhub_token == "" ? {} : {
-        repositoryCredentials = {
-          credentialsParameter = one(aws_secretsmanager_secret.dockerhub_credentials[*]).arn
-        }
-      },
       var.health_check_config != null ? {
         healthCheck = var.health_check_config
       } : {}
@@ -113,22 +107,6 @@ resource "aws_secretsmanager_secret_version" "secrets" {
   for_each      = aws_secretsmanager_secret.secrets
   secret_id     = each.value.id
   secret_string = var.secrets[each.key]
-}
-
-# Build dockerhub api token secret
-resource "aws_secretsmanager_secret" "dockerhub_credentials" {
-  count                   = var.dockerhub_username == "" || var.dockerhub_token == "" ? 0 : 1
-  description             = "DockerHub API Token"
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "dockerhub_credentials" {
-  count     = var.dockerhub_username == "" || var.dockerhub_token == "" ? 0 : 1
-  secret_id = aws_secretsmanager_secret.dockerhub_credentials[count.index].id
-  secret_string = jsonencode({
-    username = var.dockerhub_username
-    password = var.dockerhub_token
-  })
 }
 
 data "aws_region" "current" {}
@@ -152,7 +130,7 @@ resource "aws_iam_role" "execution_role" {
 }
 
 resource "aws_iam_role_policy" "secrets_policy" {
-  count       = length(local.secret_keys) > 0 || (var.dockerhub_username != "" && var.dockerhub_token != "") ? 1 : 0
+  count       = length(local.secret_keys) > 0 ? 1 : 0
   name_prefix = var.name
   policy      = data.aws_iam_policy_document.secrets_policy.json
   role        = aws_iam_role.execution_role.id
@@ -161,11 +139,8 @@ resource "aws_iam_role_policy" "secrets_policy" {
 # Allow the ECS agent to only access the secrets specified for this task
 data "aws_iam_policy_document" "secrets_policy" {
   statement {
-    actions = ["secretsmanager:GetSecretValue"]
-    resources = concat(
-      [for k, v in aws_secretsmanager_secret.secrets : v.arn],
-      aws_secretsmanager_secret.dockerhub_credentials[*].arn
-    )
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = [for k, v in aws_secretsmanager_secret.secrets : v.arn]
   }
 }
 
