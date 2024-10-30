@@ -31,11 +31,6 @@ moved {
 }
 
 moved {
-  from = module.xmtpd_rds
-  to   = module.xmtp_node_us_east_2.module.xmtpd_rds
-}
-
-moved {
   from = module.xmtpd_server
   to   = module.xmtp_node_us_east_2.module.xmtpd_server
 }

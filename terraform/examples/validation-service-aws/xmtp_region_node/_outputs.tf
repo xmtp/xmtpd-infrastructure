@@ -11,8 +11,3 @@ output "grpc_service_address" {
 output "grpc_service_dns_name" {
   value = module.xmtpd_server.grpc_service_dns_name
 }
-
-output "database_string" {
-  value     = module.xmtpd_rds.writer_connection_string
-  sensitive = true
-}
