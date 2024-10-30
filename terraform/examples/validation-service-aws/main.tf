@@ -1,17 +1,7 @@
-module "datadog_iam" {
-  source = "./modules/datadog_iam"
-
-  providers = {
-    aws     = aws
-    datadog = datadog
-  }
-}
-
 module "xmtp_node_us_east_2" {
   source = "./modules/xmtp_region_node"
 
-  vpc_cidr        = "10.1.0.0/16"
-  datadog_api_key = var.datadog_api_key
+  vpc_cidr = "10.1.0.0/16"
 
   xmtpd_server_docker_image           = var.xmtpd_server_docker_image
   mls_validation_service_docker_image = var.mls_validation_service_docker_image
@@ -34,8 +24,7 @@ module "xmtp_node_us_east_2" {
 module "xmtp_node_eu_north_1" {
   source = "./modules/xmtp_region_node"
 
-  vpc_cidr        = "10.2.0.0/16"
-  datadog_api_key = var.datadog_api_key
+  vpc_cidr = "10.2.0.0/16"
 
   xmtpd_server_docker_image           = var.xmtpd_server_docker_image
   mls_validation_service_docker_image = var.mls_validation_service_docker_image

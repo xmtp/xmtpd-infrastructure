@@ -1,9 +1,4 @@
 moved {
-  from = module.datadog_forwarder
-  to   = module.xmtp_node_us_east_2.module.datadog_forwarder
-}
-
-moved {
   from = module.vpc
   to   = module.xmtp_node_us_east_2.module.network.module.vpc
 }
@@ -29,27 +24,6 @@ moved {
   from = aws_iam_user_group_membership.developers
   to   = module.grant_user_access.aws_iam_user_group_membership.developers
 }
-
-moved {
-  from = aws_iam_policy.datadog-core
-  to   = module.datadog_iam.aws_iam_policy.datadog-core
-}
-
-moved {
-  from = aws_iam_role.datadog-integration
-  to   = module.datadog_iam.aws_iam_role.datadog-integration
-}
-
-moved {
-  from = datadog_integration_aws.this
-  to   = module.datadog_iam.datadog_integration_aws.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.datadog-core-attach
-  to   = module.datadog_iam.aws_iam_role_policy_attachment.datadog-core-attach
-}
-
 
 moved {
   from = module.enforce_mfa

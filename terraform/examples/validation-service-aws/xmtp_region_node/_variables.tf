@@ -2,11 +2,6 @@ variable "vpc_cidr" {
   description = "The IPv4 CIDR block for the VPC"
 }
 
-variable "datadog_api_key" {
-  type      = string
-  sensitive = true
-}
-
 variable "xmtpd_server_docker_image" {
   description = "Docker image for xmtpd server"
   default     = "ghcr.io/xmtp/xmtpd:main"

@@ -47,15 +47,13 @@ module "xmtpd_server" {
   source     = "../xmtpd_server"
   depends_on = [module.network, module.xmtpd_rds]
 
-  env                  = terraform.workspace
-  cluster_id           = aws_ecs_cluster.this.id
-  vpc_id               = module.network.vpc_id
-  private_subnets      = module.network.private_subnets
-  public_subnets       = module.network.public_subnets
-  docker_image         = var.xmtpd_server_docker_image
-  datadog_api_key      = var.datadog_api_key
-  elb_logs_bucket_name = module.datadog_forwarder.bucket_name
-  enable_debug_logs    = var.enable_debug_logs
+  env               = terraform.workspace
+  cluster_id        = aws_ecs_cluster.this.id
+  vpc_id            = module.network.vpc_id
+  private_subnets   = module.network.private_subnets
+  public_subnets    = module.network.public_subnets
+  docker_image      = var.xmtpd_server_docker_image
+  enable_debug_logs = var.enable_debug_logs
 
   service_config = {
     validation_service_grpc_address   = module.mls_validation_service.grpc_service_address
