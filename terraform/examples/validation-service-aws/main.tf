@@ -1,5 +1,5 @@
 module "xmtp_node_us_east_2" {
-  source = "./modules/xmtp_region_node"
+  source = "./xmtp_region_node"
 
   vpc_cidr = "10.1.0.0/16"
 
@@ -13,7 +13,7 @@ module "xmtp_node_us_east_2" {
 }
 
 module "xmtp_node_eu_north_1" {
-  source = "./modules/xmtp_region_node"
+  source = "./xmtp_region_node"
 
   vpc_cidr = "10.2.0.0/16"
 
