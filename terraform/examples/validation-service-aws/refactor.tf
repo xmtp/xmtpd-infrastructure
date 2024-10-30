@@ -31,11 +31,6 @@ moved {
 }
 
 moved {
-  from = module.xmtpd_server
-  to   = module.xmtp_node_us_east_2.module.xmtpd_server
-}
-
-moved {
   from = module.mls_validation_service
   to   = module.xmtp_node_us_east_2.module.mls_validation_service
 }

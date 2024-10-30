@@ -14,10 +14,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.62"
     }
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "~> 4.0"
-    }
   }
 }
 
@@ -38,8 +34,4 @@ provider "aws" {
       Environment = "testnet"
     }
   }
-}
-
-provider "cloudflare" {
-  api_token = var.cloudflare_api_token
 }

@@ -7,11 +7,6 @@ variable "mls_validation_service_docker_image" {
   default     = "ghcr.io/xmtp/mls-validation-service:main"
 }
 
-variable "signer_private_key" {
-  description = "Private key used to sign messages"
-  sensitive   = true
-}
-
 variable "verifier_chain_rpc_urls" {
   description = "RPC URLs for the smart contract verifier"
   sensitive   = true

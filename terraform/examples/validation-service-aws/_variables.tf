@@ -1,13 +1,3 @@
-variable "cloudflare_api_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "nodes_domain" {
-  description = "Domain that will house the nodes subdomain"
-  default     = "xmtp.network"
-}
-
 variable "mls_validation_service_docker_image" {
   description = "Docker image for mls validation service"
   default     = "ghcr.io/xmtp/mls-validation-service:main"
