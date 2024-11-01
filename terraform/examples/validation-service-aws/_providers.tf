@@ -5,7 +5,7 @@ terraform {
     organization = "xmtp"
 
     workspaces {
-      tags = ["testnet"]
+      name = "public-testnet-playground"
     }
   }
 

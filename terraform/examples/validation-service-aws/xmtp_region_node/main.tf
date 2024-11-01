@@ -8,7 +8,7 @@ module "network" {
 }
 
 module "mls_validation_service" {
-  source     = "../../../aws/xmtp-validation-service"
+  source     = "./../../../aws/xmtp-validation-service"
   depends_on = [module.network, aws_service_discovery_private_dns_namespace.xmtp]
 
   env                              = terraform.workspace
