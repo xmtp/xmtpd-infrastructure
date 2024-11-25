@@ -64,16 +64,6 @@ variable "additional_task_role_statements" {
   default = []
 }
 
-variable "efs_mounts" {
-  description = "EFS mount"
-  type = list(object({
-    name           = string
-    file_system_id = string
-    root_directory = string
-  }))
-  default = []
-}
-
 variable "health_check_config" {
   description = "ECS task definition health check config"
   nullable    = true

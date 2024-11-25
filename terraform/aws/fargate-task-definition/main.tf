@@ -15,7 +15,6 @@ locals {
   # Secrets is a sensitive input. Have to do this hack to use in a for_each
   # https://www.terraform.io/language/meta-arguments/for_each#limitations-on-values-used-in-for_each
   secret_keys = nonsensitive(toset([for k, v in var.secrets : k]))
-  efs_mounts  = toset(var.efs_mounts)
 
   labels = var.docker_labels
 }
@@ -37,17 +36,6 @@ resource "aws_ecs_task_definition" "task" {
   depends_on = [
     aws_secretsmanager_secret_version.secrets
   ]
-
-  dynamic "volume" {
-    for_each = local.efs_mounts
-    iterator = mount
-    content {
-      name = mount.value["name"]
-      efs_volume_configuration {
-        file_system_id = mount.value["file_system_id"]
-      }
-    }
-  }
 
   container_definitions = jsonencode([
     merge(
@@ -75,11 +63,6 @@ resource "aws_ecs_task_definition" "task" {
         portMappings = local.port_mappings
         # Default values that must be set to avoid re-creation
         cpu = 0
-        mountPoints = length(var.efs_mounts) > 0 ? [{
-          containerPath = var.efs_mounts[0].root_directory
-          sourceVolume  = var.efs_mounts[0].name
-          readOnly      = false
-        }] : []
         volumesFrom = []
         ulimits = [
           {

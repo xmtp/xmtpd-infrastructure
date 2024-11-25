@@ -7,6 +7,7 @@ variable "cluster_id" {
 }
 
 variable "private_subnets" {
+  type        = list(string)
   description = "The (private) subnets used to run the service"
 }
 
