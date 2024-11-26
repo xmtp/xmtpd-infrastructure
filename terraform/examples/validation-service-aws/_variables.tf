@@ -1,6 +1,6 @@
 variable "mls_validation_service_docker_image" {
   description = "Docker image for mls validation service"
-  default     = "ghcr.io/xmtp/mls-validation-service:main"
+  default     = "ghcr.io/xmtp/mls-validation-service:latest"
 }
 
 variable "verifier_chain_rpc_urls" {

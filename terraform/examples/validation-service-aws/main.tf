@@ -16,7 +16,7 @@ module "mls_validation_service" {
   vpc_id                           = module.network.vpc_id
   private_subnets                  = module.network.private_subnets
   allowed_ingress_cidr_blocks      = [for k, v in module.network.azs : cidrsubnet(module.network.vpc_cidr, 4, k)]
-  docker_image                     = "ghcr.io/xmtp/mls-validation-service:latest"
+  docker_image                     = var.mls_validation_service_docker_image
   service_discovery_namespace_name = aws_service_discovery_private_dns_namespace.xmtp.name
   chain_rpc_urls                   = var.verifier_chain_rpc_urls
   providers = {
