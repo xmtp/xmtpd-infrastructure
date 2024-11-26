@@ -44,7 +44,6 @@ module "task_definition" {
 
   ports = []
   image = var.docker_image
-  env   = var.env
 
   command = local.xmtp_node_command
 
@@ -62,13 +61,13 @@ resource "aws_ecs_service" "worker" {
   cluster                            = var.cluster_id
   task_definition                    = module.task_definition.task_definition_arn
   enable_execute_command             = false
-  desired_count                      = 1
+  desired_count                      = 1 # Set the worker to run on a single instance except during deployments
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 100
   wait_for_steady_state              = true
 
   network_configuration {
-    subnets         = var.public_subnets
+    subnets         = var.public_subnets # To avoid the NAT gateway we deploy the worker into the public subnets. This increases available bandwidth and reduces costs.
     security_groups = [aws_security_group.ecs_service.id]
   }
 

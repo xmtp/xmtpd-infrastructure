@@ -48,7 +48,6 @@ module "api_task_definition" {
 
   ports = [local.service_port]
   image = var.docker_image
-  env   = var.env
 
   command = local.xmtp_node_command
 

@@ -21,10 +21,6 @@ variable "public_subnets" {
   type        = list(string)
 }
 
-variable "env" {
-  description = "The environment we're deploying to"
-}
-
 variable "vpc_id" {
   description = "VPC ID for the service"
 }
