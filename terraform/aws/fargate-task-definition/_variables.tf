@@ -51,10 +51,6 @@ variable "command" {
   type        = list(string)
 }
 
-variable "env" {
-  description = "Environment name"
-}
-
 variable "additional_task_role_statements" {
   type = list(object({
     Effect   = string

@@ -47,7 +47,6 @@ module "task_definition" {
 
   ports = [local.service_port, local.health_check_port]
   image = var.docker_image
-  env   = var.env
   health_check_config = {
     # CMD-SHELL tells ECS to use the container's default shell to run the command
     # https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_HealthCheck.html
