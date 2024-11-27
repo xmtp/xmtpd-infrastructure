@@ -62,7 +62,7 @@ resource "aws_ecs_task_definition" "task" {
         }]
         portMappings = local.port_mappings
         # Default values that must be set to avoid re-creation
-        cpu = 0
+        cpu         = 0
         volumesFrom = []
         ulimits = [
           {
