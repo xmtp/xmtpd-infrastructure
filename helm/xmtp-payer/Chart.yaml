@@ -1,6 +1,6 @@
 apiVersion: v2
-name: xmtpd
-description: A Helm chart for XMTPD
+name: xmtp-payer
+description: A Helm chart for XMTP Payer
 
 type: application
 
