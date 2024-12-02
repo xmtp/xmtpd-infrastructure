@@ -3,7 +3,6 @@ on:
   pull_request:
 jobs:
   tf-lint:
-    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,13 +15,12 @@ jobs:
       - name: Run TFLint
         run: tflint -f compact --recursive --config "$(pwd)/.tflint.hcl"
   tf-fmt:
-    name: fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: terraform fmt -check -recursive
   go-lint-fmt:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -39,12 +37,6 @@ jobs:
 
       - name: Run staticcheck
         run: staticcheck ./...
-
-      - name: Install golint
-        run: go install golang.org/x/lint/golint@latest
-
-      - name: Run golint
-        run: golint ./...
   helm-lint:
     runs-on: ubuntu-latest
     steps:
