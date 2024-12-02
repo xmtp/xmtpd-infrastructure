@@ -1,6 +1,7 @@
 
 module "mls_validation_service" {
-  source     = "./aws/xmtp-validation-service" # TODO: Replace with git URL once merged to main
+  # tflint-ignore: terraform_module_pinned_source
+  source     = "github.com/xmtp/xmtpd-infrastructure//terraform/aws/xmtp-validation-service"
   depends_on = [module.vpc, aws_service_discovery_private_dns_namespace.xmtp]
 
   env                              = terraform.workspace
@@ -18,7 +19,8 @@ module "mls_validation_service" {
 }
 
 module "xmtpd_api" {
-  source = "./aws/xmtpd-api" # TODO: Replace with git URL once merged to main
+  # tflint-ignore: terraform_module_pinned_source
+  source = "github.com/xmtp/xmtpd-infrastructure//terraform/aws/xmtpd-api"
 
   vpc_id          = module.vpc.vpc_id
   public_subnets  = module.vpc.public_subnets
@@ -36,7 +38,7 @@ module "xmtpd_api" {
   service_secrets = {
     signer_private_key = var.signer_private_key
     chain_rpc_url      = var.chain_rpc_url
-    database_url       = "CHANGE_ME" # TODO:nm add database
+    database_url       = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
 
@@ -46,7 +48,8 @@ module "xmtpd_api" {
 }
 
 module "xmtpd_worker" {
-  source = "./aws/xmtpd-worker" # TODO: Replace with git URL once merged to main
+  # tflint-ignore: terraform_module_pinned_source
+  source = "github.com/xmtp/xmtpd-infrastructure//terraform/aws/xmtpd-worker"
 
   vpc_id         = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
@@ -62,7 +65,7 @@ module "xmtpd_worker" {
   service_secrets = {
     signer_private_key = var.signer_private_key
     chain_rpc_url      = var.chain_rpc_url
-    database_url       = "CHANGE_ME" # TODO:nm add database
+    database_url       = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
 
