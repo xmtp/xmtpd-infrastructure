@@ -148,14 +148,16 @@ func loadSecretsFromYAMLFile(t *testing.T, filePath string) map[string]string {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		t.Fatalf("Error opening file %s: %s", filePath, err)
+		t.Logf("Could not open file %s. Using default values. Error: %s", filePath, err.Error())
+		return secrets
 	}
 	defer file.Close()
 
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&secrets)
 	if err != nil {
-		t.Fatalf("Error decoding secrets from file %s: %s", filePath, err)
+		t.Logf("Could not decode file %s. Using default values. Error: %s", filePath, err.Error())
+		return secrets
 	}
 
 	return secrets
