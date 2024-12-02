@@ -95,6 +95,13 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 	return
 }
 
+func getLastSection(envKey string) string {
+	// Split the string by dots
+	parts := strings.Split(envKey, ".")
+	// Return the last part
+	return parts[len(parts)-1]
+}
+
 // GetDefaultSecrets loads secrets in the following priority order:
 // 1. Environmental variables.
 // 2. Well-known file on disk (e.g., LOCAL_SECRETS_FILE).
@@ -118,7 +125,7 @@ func GetDefaultSecrets(t *testing.T) map[string]string {
 	// Merge secrets with priority: environment variable > file > default
 	mergedSecrets := make(map[string]string)
 	for key, defaultValue := range defaultSecrets {
-		if value, found := os.LookupEnv(key); found {
+		if value, found := os.LookupEnv(getLastSection(key)); found {
 			mergedSecrets[key] = value
 		} else if value, found := secretsFromFile[key]; found {
 			mergedSecrets[key] = value
