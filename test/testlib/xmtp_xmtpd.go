@@ -12,21 +12,31 @@ import (
 	"testing"
 )
 
-func InstallXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName string) {
+func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
 		helm.Install(t, options, XMTPD_HELM_CHART_PATH, helmChartReleaseName)
 	} else {
-		helm.Install(t, options, "xmtp/xmtpd ", helmChartReleaseName)
+		helm.Install(t, options, "xmtp/xmtpd", helmChartReleaseName)
 	}
 }
 
+// StartXMTPD
+/**
+ * StartXMTPD starts a XMTPD Node using the specified Helm options and namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param options *helm.Options - The Helm options for the installation.
+ * @param namespace string - The namespace for the node.
+ *
+ * @return (string, string) - Returns the Helm chart release name and namespace.
+ */
 func StartXMTPD(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string) {
-	return StartXMTPDTemplate(t, options, replicaCount, namespace, "", InstallXMTPD, true)
+	return startXMTPDTemplate(t, options, replicaCount, namespace, "", installXMTPD, true)
 }
 
 type XMTPDInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func StartXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep MLSInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
+func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep MLSInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName = releaseName
@@ -91,6 +101,7 @@ func StartXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 // 3. Default values.
 func GetDefaultSecrets(t *testing.T) map[string]string {
 	defaultSecrets := map[string]string{
+		"env.secret.XMTPD_DB_WRITER_CONNECTION_STRING":        "<replace-me>",
 		"env.secret.XMTPD_SIGNER_PRIVATE_KEY":                 "<replace-me>",
 		"env.secret.XMTPD_PAYER_PRIVATE_KEY":                  "<replace-me>",
 		"env.secret.XMTPD_CONTRACTS_RPC_URL":                  "https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/",

@@ -10,13 +10,23 @@ import (
 	"testing"
 )
 
-func InstallDB(t *testing.T, options *helm.Options, helmChartReleaseName string) {
+func installDB(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	helm.Install(t, options, "oci://registry-1.docker.io/bitnamicharts/postgresql", helmChartReleaseName)
 
 }
 
+// StartDB
+/**
+ * StartDB starts a PostgreSQL database using the specified Helm options and namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param options *helm.Options - The Helm options for the installation.
+ * @param namespace string - The namespace for the PostgreSQL pod.
+ *
+ * @return (string, string, DB) - Returns the Helm chart release name, namespace, and DB connection information.
+ */
 func StartDB(t *testing.T, options *helm.Options, namespace string) (string, string, DB) {
-	return StartDBTemplate(t, options, 1, namespace, "pg", InstallDB, true)
+	return startDBTemplate(t, options, 1, namespace, "pg", installDB, true)
 }
 
 type DBInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
@@ -26,7 +36,7 @@ type DB struct {
 	ConnString string
 }
 
-func StartDBTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep DBInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string, db DB) {
+func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep DBInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string, db DB) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName = releaseName

@@ -2,7 +2,6 @@ package testlib
 
 import (
 	"context"
-	"fmt"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -21,93 +20,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const NAMESPACE_NAME_PREFIX = "test"
-
 /** Used to wait for all async calls of GetAppLog() routine to finish before the test finishes */
 var appLogCollectorsWg sync.WaitGroup
 
-/** Lists of the teardown and diagnostic teardown funcs */
-var teardownLists = make(map[string][]func())
-
+// GetAppLog
 /**
- * add a teardown function to the named list - for deferred execution.
- *
- * The teardown functions are called in reverse order of insertion, by a call to Teardown(name).
- *
- * The typical idiom is:
- * <pre>
- *   testlib.AddTeardown("DATABASE", func() { ...})
- *   // possibly more testlib.AddTeardown("DATABASE", func() { ... })
- *   defer testlib.Teardown("DATABASE")
- * <pre>
- */
-func AddTeardown(name string, teardownFunc func()) {
-	teardownLists[name] = append(teardownLists[name], teardownFunc)
-}
-
-/**
- * Call the stored teardown functions in the named list, in the correct order (last-in-first-out)
- *
- * NOTE: Any DIAGNOSTIC teardowns - those added with AddDiagnosticTeardown() for this name - are called BEFORE any other teardowns for this name.
- *
- * The typical use of Teardown is with a deferred call:
- * defer testlib.Teardown("SOME NAME")
- * See: testlib.AddTeardown(); testlib.AddDiagnosticTeardown()
- */
-func Teardown(name string) {
-	// ensure both list and diagnostic list are removed.
-	defer func() { delete(teardownLists, name) }()
-
-	list := teardownLists[name]
-
-	for x := len(list) - 1; x >= 0; x-- {
-		list[x]()
-	}
-}
-
-/**
- * Adds a teardown function to all named teardown lists - for deferred execution.
- *
- * The teardown functions are called in reverse order of insertion, by a call to Teardown(name).
+ * GetAppLog retrieves the log output from a specified pod within a Kubernetes namespace and writes it to a file.
  *
  */
-func AddGlobalTeardown(teardownFunc func()) {
-	for name := range teardownLists {
-		AddTeardown(name, teardownFunc)
-	}
-}
-
-/**
-* Verify all teardownLists have been executed already; and throw an require if not.
-* Can be used to verify correct coding of a test that uses teardown - and to ensure eventual release of resources.
-*
-* NOTE: while the funcs are called in the correct order for each list,
-* there can be NO guarantee that the lists are iterated in the correct order.
-*
-* This function MUST NOT be used as a replacement for calling teardown() at the correct point in the code.
- */
-
-func VerifyTeardown(t *testing.T) {
-	// ensure all funcs in all lists are released
-	defer func() { teardownLists = make(map[string][]func()) }()
-
-	// release all remaining resources - this is a "best effort" as the order of iterating the map is arbitrary
-	uncleared := make([]string, 0)
-
-	// make a "best-effort" at releasing all remaining resources
-	for name, list := range teardownLists {
-		uncleared = append(uncleared, name)
-
-		for x := len(list) - 1; x >= 0; x-- {
-			list[x]()
-		}
-	}
-
-	require.Equal(t, 0, len(uncleared), "Error - %d teardownLists were left uncleared: %s", len(uncleared), uncleared)
-	t.Log("Waiting for all logging collectors to finish")
-	appLogCollectorsWg.Wait()
-}
-
 func GetAppLog(t *testing.T, namespace string, podName string, fileNameSuffix string, podLogOptions *corev1.PodLogOptions) string {
 	defer appLogCollectorsWg.Done()
 	appLogCollectorsWg.Add(1)
@@ -203,34 +123,19 @@ func findXmtpContainer(pod *corev1.Pod) *corev1.Container {
 	return nil
 }
 
-func GetK8sEventLog(t *testing.T, namespace string) {
-	dirPath := filepath.Join(RESULT_DIR, namespace)
-	filePath := filepath.Join(dirPath, K8S_EVENT_LOG_FILE)
-
-	_ = os.MkdirAll(dirPath, 0700)
-
-	f, err := os.Create(filePath)
-	require.NoError(t, err)
-	defer f.Close()
-
-	options := k8s.NewKubectlOptions("", "", namespace)
-
-	client, err := k8s.GetKubernetesClientFromOptionsE(t, options)
-	require.NoError(t, err)
-
-	var opts metav1.ListOptions
-
-	events, err := client.CoreV1().Events(namespace).Watch(context.TODO(), opts)
-	require.NoError(t, err)
-
-	writer := io.Writer(f)
-
-	for event := range events.ResultChan() {
-		_, err = fmt.Fprintln(writer, event)
-		require.NoError(t, err)
-	}
-}
-
+// Await
+/**
+ * Await repeatedly evaluates a provided lambda function until it returns true, or a specified timeout duration is reached.
+ *
+ * @param t *testing.T - The testing context.
+ * @param lmbd func() bool - A lambda function that returns a boolean indicating a condition.
+ * @param timeout time.Duration - The maximum duration to wait for the lambda function to return true.
+ *
+ * The function checks the lambda function's return value at regular intervals (1 second). If the lambda
+ * function returns true within the timeout period, the function returns and the test continues. If the
+ * lambda function does not return true within the timeout period, it logs the full stack trace and fails
+ * the test with a timeout error.
+ */
 func Await(t *testing.T, lmbd func() bool, timeout time.Duration) {
 	now := time.Now()
 	for timeExpired := time.After(timeout); ; {
@@ -249,10 +154,19 @@ func Await(t *testing.T, lmbd func() bool, timeout time.Duration) {
 	}
 }
 
+// AwaitNrReplicasScheduled
+/**
+ * AwaitNrReplicasScheduled waits until the specified number of replicas of a pod are scheduled in the given namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ * @param expectedName string - The expected name substring of the pods to check for.
+ * @param nrReplicas int - The number of replicas expected to be scheduled.
+ *
+ * The function waits for a maximum of 5 seconds, checking once per second, to find the expected number of replicas that
+ * are scheduled. If the expected number is found within the timeout, the function returns; otherwise, it logs the error.
+ */
 func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName string, nrReplicas int) {
-	// in multi-cluster tests the Pods won't be scheduled until disks are
-	// provisioned which takes longer than in minikube; adjust the timeout if
-	// needed
 	timeout := 5 * time.Second
 
 	Await(t, func() bool {
@@ -289,6 +203,18 @@ func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName strin
 	}, timeout)
 }
 
+// AwaitNrReplicasReady
+/**
+ * AwaitNrReplicasReady waits until the specified number of replicas of a pod are ready in the given namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ * @param expectedName string - The expected name substring of the pods to check for.
+ * @param nrReplicas int - The number of replicas expected to be ready.
+ *
+ * The function waits for a maximum of 30 seconds, checking once per second, to find the expected number of replicas that
+ * are ready. If the expected number is found within the timeout, the function returns; otherwise, it logs the error.
+ */
 func AwaitNrReplicasReady(t *testing.T, namespace string, expectedName string, nrReplicas int) {
 	Await(t, func() bool {
 		var cnt int
@@ -306,6 +232,15 @@ func AwaitNrReplicasReady(t *testing.T, namespace string, expectedName string, n
 	}, 30*time.Second)
 }
 
+// FindAllPodsInSchema
+/**
+ * FindAllPodsInSchema retrieves all pods in the specified namespace and sorts them by creation timestamp.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ *
+ * @return []corev1.Pod - A sorted slice of all pods in the specified namespace.
+ */
 func FindAllPodsInSchema(t *testing.T, namespace string) []corev1.Pod {
 	options := k8s.NewKubectlOptions("", "", namespace)
 	filter := metav1.ListOptions{}
@@ -327,6 +262,16 @@ func arePodConditionsMet(pod *corev1.Pod, condition corev1.PodConditionType,
 	return false
 }
 
+// FindPodsFromChart
+/**
+ * FindPodsFromChart retrieves pods whose names contain the expected substring in the specified namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ * @param expectedName string - The expected name substring of the pods to find.
+ *
+ * @return []corev1.Pod - A slice of pods whose names contain the expected substring.
+ */
 func FindPodsFromChart(t *testing.T, namespace string, expectedName string) []corev1.Pod {
 
 	var pods []corev1.Pod

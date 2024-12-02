@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func InstallMLS(t *testing.T, options *helm.Options, helmChartReleaseName string) {
+func installMLS(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
 		helm.Install(t, options, MLS_HELM_CHART_PATH, helmChartReleaseName)
 	} else {
@@ -18,8 +18,18 @@ func InstallMLS(t *testing.T, options *helm.Options, helmChartReleaseName string
 	}
 }
 
+// StartMLS
+/**
+ * StartMLS starts a MLS Validation Service using the specified Helm options and namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param options *helm.Options - The Helm options for the installation.
+ * @param namespace string - The namespace for the MLS Validation Service.
+ *
+ * @return (string, string, MLS) - Returns the Helm chart release name, namespace, and MLS connection information.
+ */
 func StartMLS(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string, MLS) {
-	return StartMLSTemplate(t, options, replicaCount, namespace, "", InstallMLS, true)
+	return StartMLSTemplate(t, options, replicaCount, namespace, "", installMLS, true)
 }
 
 type MLS struct {
