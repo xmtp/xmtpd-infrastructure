@@ -2,5 +2,7 @@ apiVersion: v2
 name: mls-validation-service
 description: A Helm chart for XMTP MLS Validation Service
 type: application
+maintainers:
+  - name: XMTPD
 version: 0.1.0
 appVersion: "v0.1.0"
