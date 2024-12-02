@@ -163,11 +163,12 @@ func Await(t *testing.T, lmbd func() bool, timeout time.Duration) {
  * @param expectedName string - The expected name substring of the pods to check for.
  * @param nrReplicas int - The number of replicas expected to be scheduled.
  *
- * The function waits for a maximum of 5 seconds, checking once per second, to find the expected number of replicas that
+ * The function waits for a maximum of 1 minute, checking once per second, to find the expected number of replicas that
  * are scheduled. If the expected number is found within the timeout, the function returns; otherwise, it logs the error.
  */
 func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName string, nrReplicas int) {
-	timeout := 5 * time.Second
+	// the cluster might be downloading the docker images, so this might take a while the first time
+	timeout := 1 * time.Minute
 
 	Await(t, func() bool {
 		var pods []corev1.Pod
@@ -216,6 +217,8 @@ func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName strin
  * are ready. If the expected number is found within the timeout, the function returns; otherwise, it logs the error.
  */
 func AwaitNrReplicasReady(t *testing.T, namespace string, expectedName string, nrReplicas int) {
+	timeout := 30 * time.Second
+
 	Await(t, func() bool {
 		var cnt int
 		for _, pod := range FindAllPodsInSchema(t, namespace) {
@@ -229,7 +232,7 @@ func AwaitNrReplicasReady(t *testing.T, namespace string, expectedName string, n
 		t.Logf("%d pods READY for name '%s'\n", cnt, expectedName)
 
 		return cnt == nrReplicas
-	}, 30*time.Second)
+	}, timeout)
 }
 
 // FindAllPodsInSchema
