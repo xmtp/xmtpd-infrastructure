@@ -32,7 +32,7 @@ helm install mls-validation-service mls-validation-service/
 
 The XMPT daemon depends on the following:
 - a PG database running locally
-- the MLS validation service running locally
+- the MLS validation service running locally. XMTP Expects the format `http|https://<DNS|IP>[:port]`
 - a blockchain with the [Nodes contract](https://github.com/xmtp/xmtpd)
 - a private key
 - the private key needs to be registered with the blockchain smart contract and a NodeID has to be issued. For more info see [Onboarding](https://github.com/xmtp/xmtpd/blob/main/doc/onboarding.md)
@@ -41,11 +41,11 @@ Create a `xmtpd.yaml` file and fill out all required variables:
 ```yaml
 env:
   secret:
-    XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://postgres:postgres@psql-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
+    XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://postgres:postgres@pg-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
     XMTPD_PAYER_PRIVATE_KEY: "<private-key>"
     XMTPD_CONTRACTS_RPC_URL: "https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/"
-    XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "mls-validation-service.default.svc.cluster.local:50051"
+    XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
     XMTPD_CONTRACTS_CHAIN_ID: "34498"
     XMTPD_CONTRACTS_NODES_ADDRESS: "<nodes-address>"
     XMTPD_CONTRACTS_MESSAGES_ADDRESS: "<messages-address>"
@@ -68,7 +68,32 @@ You can confirm via:
 $ kubectl get pods
 NAME                                      READY   STATUS    RESTARTS   AGE
 mls-validation-service-75b6b96f79-kp4jq   1/1     Running   0          6h30m
-psql-postgresql-0                         1/1     Running   0          6h26m
+pg-postgresql-0                           1/1     Running   0          6h26m
 xmtpd-7dd49f6b88-mfwls                    1/1     Running   0          4h56m
 xmtpd-7dd49f6b88-xdk6k                    1/1     Running   0          4h56m
+```
+
+## XMTP Payer Helm Chart Installation
+
+If you are a XMTPD Node operator, you will not need to run the Payer service.
+This service might be required by application developers that work on top of the XMTP protocol.
+
+The payer service does not depend on the XMTPD service, a database, or the MLS service.
+It does require access to the public internet to read state from the blockchain.
+It also requires write access to all known XMTP nodes in the cluster.
+
+As of XMTPD docker image v0.1.1, all services require the same configuration options even though some might be unused.
+As such, you can reuse the same config that we described in [Step 3](#3-Installing-the-XMTPD-Node).
+
+Install the helm chart
+```bash
+helm install xmtp-payer xmtp-payer/ -f xmtpd.yaml
+```
+Once you have successfully installed the chart, you should see 2 pods running.
+You can confirm via:
+```bash
+$ kubectl get pods
+NAME                                      READY   STATUS    RESTARTS   AGE
+xmtp-payer-7978dbcb8-mnvxx                1/1     Running   0          9m48s
+xmtp-payer-7978dbcb8-vkwsv                1/1     Running   0          9m48s
 ```

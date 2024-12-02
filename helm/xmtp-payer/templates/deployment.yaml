@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "xmtpd.fullname" . }}
+  name: {{ include "xmtp-payer.fullname" . }}
   labels:
-    {{- include "xmtpd.labels" . | nindent 4 }}
+    {{- include "xmtp-payer.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "xmtpd.selectorLabels" . | nindent 6 }}
+      {{- include "xmtp-payer.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,7 +16,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "xmtpd.labels" . | nindent 8 }}
+        {{- include "xmtp-payer.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "xmtpd.serviceAccountName" . }}
+      serviceAccountName: {{ include "xmtp-payer.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -35,11 +35,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: XMTPD_REPLICATION_ENABLE
-              value: "true"
-            - name: XMTPD_SYNC_ENABLE
-              value: "true"
-            - name: XMTPD_INDEXER_ENABLE
+            - name: XMTPD_PAYER_ENABLE
               value: "true"
             {{- include "helpers.list-env-variables" . | indent 12 }}
           ports:
