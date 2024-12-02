@@ -1,0 +1,27 @@
+name: Test Charts
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  helm-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '^1.23.1'
+          go-version-file: go.mod
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.14.4
+      - name: Run Tests
+        run: |
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go test -v ./... | go-junit-report -set-exit-code -iocopy -out report.xml
