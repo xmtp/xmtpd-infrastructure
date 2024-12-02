@@ -24,6 +24,9 @@ jobs:
       - name: Create k8s Kind Cluster
         uses: helm/kind-action@v1
       - name: Run Tests
+        env:
+          XMTPD_PAYER_PRIVATE_KEY:  ${{ secrets.XMTPD_PAYER_PRIVATE_KEY }}
+          XMTPD_SIGNER_PRIVATE_KEY: ${{ secrets.XMTPD_SIGNER_PRIVATE_KEY }}
         run: go test -v ./...
 
       - name: Upload Test Artifacts
