@@ -22,6 +22,4 @@ jobs:
         with:
           version: v3.14.4
       - name: Run Tests
-        run: |
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          go test -v ./... | go-junit-report -set-exit-code -iocopy -out report.xml
+        run: go test -v ./...
