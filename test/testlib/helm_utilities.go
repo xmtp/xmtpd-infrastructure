@@ -58,22 +58,20 @@ func GetAppLog(t *testing.T, namespace string, podName string, fileNameSuffix st
 	return filePath
 }
 
-func getAppLogStreamE(t *testing.T, namespace string, podName string, podLogOptions *corev1.PodLogOptions) (reader io.ReadCloser, err error) {
+func getAppLogStreamE(t *testing.T, namespace string, podName string, podLogOptions *corev1.PodLogOptions) (io.ReadCloser, error) {
 	options := k8s.NewKubectlOptions("", "", namespace)
 
 	client, err := k8s.GetKubernetesClientFromOptionsE(t, options)
+	require.NoError(t, err)
 
 	if podLogOptions.Container == "" {
 		// Select first container if not specified; otherwise the GetLogs method will fail if there are sidecars
-		pod, e := client.CoreV1().Pods(options.Namespace).Get(context.TODO(), podName, metav1.GetOptions{})
-		if e != nil {
-			err = e
-			return
-		}
+		pod, err := client.CoreV1().Pods(options.Namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+		require.NoError(t, err)
+
 		container := findXmtpContainer(pod)
 		if container == nil {
-			err = &ContainersNotStarted{}
-			return
+			return nil, &ContainersNotStarted{}
 		}
 		podLogOptions.Container = container.Name
 		for _, containerStatus := range pod.Status.ContainerStatuses {
@@ -91,8 +89,7 @@ func getAppLogStreamE(t *testing.T, namespace string, podName string, podLogOpti
 		}
 	}
 
-	reader, err = client.CoreV1().Pods(options.Namespace).GetLogs(podName, podLogOptions).Stream(context.TODO())
-	return
+	return client.CoreV1().Pods(options.Namespace).GetLogs(podName, podLogOptions).Stream(context.TODO())
 }
 
 func doesContainerHaveLogs(container *corev1.Container, containerStatuses []corev1.ContainerStatus) bool {
