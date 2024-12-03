@@ -1,8 +1,8 @@
 apiVersion: v2
 name: xmtpd
 description: A Helm chart for XMTPD
-
 type: application
-
+maintainers:
+  - name: XMTPD
 version: 0.1.0
 appVersion: "v0.1.1"
