@@ -64,21 +64,26 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		return
 	}
 
-	xmtpdDeployment := helmChartReleaseName
+	xmtpdDeploymentSync := fmt.Sprintf("%s-sync", helmChartReleaseName)
+	xmtpdDeploymentApi := fmt.Sprintf("%s-api", helmChartReleaseName)
 
 	defer func() {
 		// collect some useful diagnostics
 		if t.Failed() {
 			// ignore any errors. This is already failed
-			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeployment)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentSync)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentApi)
 		}
 	}()
 
-	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeployment, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeploymentSync, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeploymentApi, replicaCount)
 
-	pods := FindPodsFromChart(t, namespaceName, xmtpdDeployment)
+	podsSync := FindPodsFromChart(t, namespaceName, xmtpdDeploymentSync)
+	podsApi := FindPodsFromChart(t, namespaceName, xmtpdDeploymentApi)
 
-	for _, pod := range pods {
+	allPods := append(podsSync, podsApi...)
+	for _, pod := range allPods {
 		AddTeardown(TEARDOWN_XMTPD, func() {
 			if t.Failed() {
 				// dump diagnostic info to test logs
@@ -90,7 +95,8 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		})
 	}
 
-	AwaitNrReplicasReady(t, namespaceName, xmtpdDeployment, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentSync, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentApi, replicaCount)
 
 	return
 }

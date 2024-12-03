@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "xmtpd.fullname" . }}
+  name: {{ include "xmtpd.fullname" . }}-sync
   labels:
     {{- include "xmtpd.labels" . | nindent 4 }}
 spec:
@@ -35,27 +35,11 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: XMTPD_REPLICATION_ENABLE
-              value: "true"
             - name: XMTPD_SYNC_ENABLE
               value: "true"
             - name: XMTPD_INDEXER_ENABLE
               value: "true"
             {{- include "helpers.list-env-variables" . | indent 12 }}
-          ports:
-            - name: grpc
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          startupProbe:
-            grpc:
-              port: {{ .Values.service.port }}
-            failureThreshold: 3
-            periodSeconds: 10
-          livenessProbe:
-            grpc:
-              port: {{ .Values.service.port }}
-            failureThreshold: 3
-            periodSeconds: 10
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
