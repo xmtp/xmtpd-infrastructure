@@ -2,8 +2,7 @@ name: Lint
 on:
   pull_request:
 jobs:
-  lint:
-    name: lint
+  tf-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,9 +14,39 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Run TFLint
         run: tflint -f compact --recursive --config "$(pwd)/.tflint.hcl"
-  fmt:
-    name: fmt
+  tf-fmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: terraform fmt -check -recursive
+  go-lint-fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.23
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Helm
+        uses: azure/setup-helm@v4.2.0
+        with:
+          version: v3.14.4
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+      - name: Run chart-testing (lint)
+        run: ct lint --all --chart-dirs helm/
