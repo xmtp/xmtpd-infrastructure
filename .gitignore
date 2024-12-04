@@ -127,3 +127,8 @@ Temporary Items
 *.icloud
 
 # End of https://www.toptal.com/developers/gitignore/api/helm,macos,jetbrains+all
+
+# Test results
+results
+
+secrets.yaml
