@@ -8,7 +8,7 @@ module "mls_validation_service" {
   cluster_id                       = aws_ecs_cluster.this.id
   vpc_id                           = module.vpc.vpc_id
   private_subnets                  = module.vpc.private_subnets
-  allowed_ingress_cidr_blocks      = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 4, k)]
+  allowed_ingress_cidr_blocks      = concat(module.vpc.private_subnets_cidr_blocks, module.vpc.public_subnets_cidr_blocks)
   docker_image                     = var.mls_validation_service_docker_image
   service_discovery_namespace_name = aws_service_discovery_private_dns_namespace.xmtp.name
   chain_rpc_urls                   = var.verifier_chain_rpc_urls
@@ -19,6 +19,7 @@ module "mls_validation_service" {
 }
 
 module "xmtpd_api" {
+  depends_on = [aws_acm_certificate_validation.public]
   # tflint-ignore: terraform_module_pinned_source
   source = "github.com/xmtp/xmtpd-infrastructure//terraform/aws/xmtpd-api"
 
@@ -27,6 +28,7 @@ module "xmtpd_api" {
   private_subnets = module.vpc.private_subnets
   docker_image    = var.xmtpd_docker_image
   cluster_id      = aws_ecs_cluster.this.id
+  certificate_arn = aws_acm_certificate.public.arn
 
   service_config = {
     validation_service_grpc_address   = module.mls_validation_service.grpc_service_address

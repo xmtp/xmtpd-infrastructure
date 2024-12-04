@@ -53,3 +53,8 @@ variable "signer_private_key" {
   sensitive   = true
   type        = string
 }
+
+variable "domain_name" {
+  description = "The domain name to use for public endpoints. This must have already been registered through AWS Route53 Domains"
+  type        = string
+}
