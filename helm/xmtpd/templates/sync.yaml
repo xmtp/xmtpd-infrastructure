@@ -39,7 +39,25 @@ spec:
               value: "true"
             - name: XMTPD_INDEXER_ENABLE
               value: "true"
+            - name: XMTPD_METRICS_ENABLE
+              value: "true"
+            - name: XMTPD_METRICS_METRICS_ADDRESS
+              value: "0.0.0.0"
             {{- include "helpers.list-env-variables" . | indent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 8008
+              scheme: HTTP
+            failureThreshold: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8008
+              scheme: HTTP
+            failureThreshold: 3
+            periodSeconds: 10
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

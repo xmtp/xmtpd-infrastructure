@@ -37,6 +37,10 @@ spec:
           env:
             - name: XMTPD_REPLICATION_ENABLE
               value: "true"
+            - name: XMTPD_METRICS_ENABLE
+              value: "true"
+            - name: XMTPD_METRICS_METRICS_ADDRESS
+              value: "0.0.0.0"
             {{- include "helpers.list-env-variables" . | indent 12 }}
           ports:
             - name: grpc
