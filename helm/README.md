@@ -62,7 +62,7 @@ helm install xmtpd xmtpd/ -f xmtpd.yaml
 
 ## Validating the installation
 
-Once you have successfully installed all charts, including a DB, you should see 6 pods running.
+Once you have successfully installed all charts, including a DB, you should see 4 pods running.
 You can confirm via:
 ```bash
 $ kubectl get pods
@@ -70,9 +70,7 @@ NAME                                      READY   STATUS    RESTARTS   AGE
 mls-validation-service-75b6b96f79-kp4jq   1/1     Running   0          6h30m
 pg-postgresql-0                           1/1     Running   0          6h26m
 xmtpd-api-7dd49f6b88-mfwls                1/1     Running   0          4h56m
-xmtpd-api-7dd49f6b88-xdk6k                1/1     Running   0          4h56m
 xmtpd-sync-7dd49f6b88-dn28d               1/1     Running   0          4h56m
-xmtpd-sync-7dd49f6b88-39axn               1/1     Running   0          4h56m
 ```
 
 ## XMTP Payer Helm Chart Installation
