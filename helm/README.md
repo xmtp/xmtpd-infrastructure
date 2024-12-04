@@ -69,8 +69,8 @@ $ kubectl get pods
 NAME                                      READY   STATUS    RESTARTS   AGE
 mls-validation-service-75b6b96f79-kp4jq   1/1     Running   0          6h30m
 pg-postgresql-0                           1/1     Running   0          6h26m
-xmtpd-7dd49f6b88-mfwls                    1/1     Running   0          4h56m
-xmtpd-7dd49f6b88-xdk6k                    1/1     Running   0          4h56m
+xmtpd-api-7dd49f6b88-mfwls                1/1     Running   0          4h56m
+xmtpd-sync-7dd49f6b88-dn28d               1/1     Running   0          4h56m
 ```
 
 ## XMTP Payer Helm Chart Installation

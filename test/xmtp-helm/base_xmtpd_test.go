@@ -32,5 +32,5 @@ func TestKubernetesBasicXMTPDInstall(t *testing.T) {
 	}
 
 	defer testlib.Teardown(testlib.TEARDOWN_XMTPD)
-	testlib.StartXMTPD(t, &options, 2, namespace)
+	testlib.StartXMTPD(t, &options, 1, namespace)
 }
