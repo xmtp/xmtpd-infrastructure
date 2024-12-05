@@ -67,8 +67,9 @@ resource "aws_ecs_service" "worker" {
   wait_for_steady_state              = true
 
   network_configuration {
-    subnets         = var.public_subnets # To avoid the NAT gateway we deploy the worker into the public subnets. This increases available bandwidth and reduces costs.
-    security_groups = [aws_security_group.ecs_service.id]
+    subnets          = var.public_subnets # To avoid the NAT gateway we deploy the worker into the public subnets. This increases available bandwidth and reduces costs.
+    security_groups  = [aws_security_group.ecs_service.id]
+    assign_public_ip = true
   }
 
   capacity_provider_strategy {
