@@ -41,11 +41,11 @@ Create a `xmtpd.yaml` file and fill out all required variables:
 ```yaml
 env:
   secret:
-    XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://postgres:postgres@pg-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
+    XMTPD_DB_WRITER_CONNECTION_STRING: "<postgres://postgres:postgres@pg-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable>"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
     XMTPD_PAYER_PRIVATE_KEY: "<private-key>"
-    XMTPD_CONTRACTS_RPC_URL: "https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/"
-    XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
+    XMTPD_CONTRACTS_RPC_URL: "<https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/>"
+    XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "<http://mls-validation-service.default.svc.cluster.local:50051>"
     XMTPD_CONTRACTS_CHAIN_ID: "34498"
     XMTPD_CONTRACTS_NODES_ADDRESS: "<nodes-address>"
     XMTPD_CONTRACTS_MESSAGES_ADDRESS: "<messages-address>"
