@@ -1,1 +1,18 @@
-1. Get the application URL by running these commands:
+###########################################################
+###                 Application Access Info             ###
+###########################################################
+
+Your application has been deployed successfully!
+
+You can access it using the following command:
+
+To get the ClusterIP service:
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "mls-validation-service.fullname" . }} -o jsonpath='{.spec.clusterIP}')
+  echo "Application is available at http://$SERVICE_IP:{{ .Values.service.port }}"
+
+If you are using port-forwarding:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "mls-validation-service.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }}
+  echo "Application is available at http://127.0.0.1:{{ .Values.service.port }}"
+
+To point your XMTPD service to this MLS Validation Service running in the same cluster, run:
+  export XMTPD_MLS_VALIDATION_GRPC_ADDRESS=http://{{ include "mls-validation-service.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:50051
