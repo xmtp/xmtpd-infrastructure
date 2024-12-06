@@ -6,7 +6,7 @@ Your application has been deployed successfully!
 
 You can access it using the following command:
 
-To get the ClusterIP service:
+To get the ClusterIP service, run:
   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "mls-validation-service.fullname" . }} -o jsonpath='{.spec.clusterIP}')
   echo "Application is available at http://$SERVICE_IP:{{ .Values.service.port }}"
 
