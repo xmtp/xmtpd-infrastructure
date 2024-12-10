@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "xmtpd.ingressName" . }}
+  name: {{ include "xmtp-payer.ingressName" . }}
   labels:
-    {{- include "xmtpd.labels" . | nindent 4 }}
+    {{- include "xmtp-payer.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.ingress.className }}
     {{- if .Values.ingress.globalStaticIPName }}
@@ -26,7 +26,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name:  {{ include "xmtpd.fullname" . }}
+                name:  {{ include "xmtp-payer.fullname" . }}
                 port:
                   number: {{ .Values.service.port }}
   {{- if .Values.ingress.tls.secretName }}

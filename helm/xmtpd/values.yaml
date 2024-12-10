@@ -34,7 +34,7 @@ ingress:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
   host: ""
-  className: gce
+  className: nginx
   # set static-IP if being used by the cloud provider
   # globalStaticIPName: xmtpd-static-ip
   tls: {}

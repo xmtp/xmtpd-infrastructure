@@ -127,12 +127,10 @@ In short, the steps look roughly like this:
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
 helm repo add jetstack https://charts.jetstack.io --force-update
-helm install cert-manager --namespace cert-manager --version v1.16.2 jetstack/cert-manager --set installCRDs=true --set global.leaderElection.namespace="cert-manager"
+helm install cert-manager --namespace cert-manager --version v1.16.2 jetstack/cert-manager --set global.leaderElection.namespace="cert-manager"
 ```
 
 The default leader election namespace will [not work in GKE with autopilot](https://github.com/kubernetes-sigs/kubespray/pull/8424).
-
-Additionally, you also want to install all CRDS via `--set installCRDs=true`
 
 After a few minutes, you should see your secret populated with correct data:
 ```shell
