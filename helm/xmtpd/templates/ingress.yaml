@@ -1,0 +1,43 @@
+{{- if .Values.ingress.create -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "xmtpd.ingressName" . }}
+  labels:
+    {{- include "xmtpd.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.className }}
+    {{- if .Values.ingress.globalStaticIPName }}
+    # This tells Google Cloud to associate the External Load Balancer with the static IP
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.ingress.globalStaticIPName | quote }}
+    {{- end }}
+    {{- if .Values.ingress.tls.certIssuer }}
+    cert-manager.io/issuer: {{ .Values.ingress.tls.certIssuer }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  defaultBackend:
+    service:
+      name: {{ include "xmtpd.fullname" . }}
+      port:
+        number: {{ .Values.service.port }}
+  {{- if .Values.ingress.tls.secretName }}
+  tls:
+  - secretName: {{ .Values.ingress.tls.secretName }}
+    hosts:
+      - {{ .Values.ingress.host }}
+  {{- end }}
+
+---
+{{- if .Values.ingress.tls.createEmptySecret }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.ingress.tls.secretName }}
+type: kubernetes.io/tls
+data:
+  tls.crt: ""
+  tls.key: ""
+{{- end }}
+
+{{- end }}

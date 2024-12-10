@@ -61,6 +61,17 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
+{{/*
+Create the name of the ingress to use
+*/}}
+{{- define "xmtpd.ingressName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- default (include "xmtpd.fullname" .) .Values.ingress.name }}
+{{- else }}
+{{- default "default" .Values.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
 {{- define "helpers.list-env-variables"}}
 {{- range $key, $val := .Values.env.secret }}
 - name: {{ $key }}

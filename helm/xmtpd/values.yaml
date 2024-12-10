@@ -27,6 +27,21 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+ingress:
+  # Specifies whether a service account should be created
+  create: false
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  host: ""
+  className: gce
+  # set static-IP if being used by the cloud provider
+  # globalStaticIPName: xmtpd-static-ip
+  tls: {}
+    # certIssuer: letsencrypt-production
+    # secretName: tls-certs
+    # createEmptySecret: true
+
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 podAnnotations: {}
@@ -48,7 +63,7 @@ securityContext: {}
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: LoadBalancer
+  type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 80
   targetPort: 5050
