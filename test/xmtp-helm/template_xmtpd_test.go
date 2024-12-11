@@ -100,22 +100,6 @@ func TestXmtpdEnableIngress(t *testing.T) {
 	assert.Equal(t, "nginx", *ingress.Spec.IngressClassName)
 }
 
-func TestXmtpdIngressStaticIP(t *testing.T) {
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"ingress.create":             "true",
-			"ingress.globalStaticIPName": "xmtpd-static-ip",
-		},
-	}
-
-	output := helm.RenderTemplate(t, options, testlib.XMTPD_HELM_CHART_PATH, "release-name", []string{})
-
-	ingress := extractIngress(t, output)
-	assert.Contains(t, ingress.Annotations, "kubernetes.io/ingress.global-static-ip-name")
-	assert.Equal(t, "xmtpd-static-ip", ingress.Annotations["kubernetes.io/ingress.global-static-ip-name"])
-}
-
 func TestXmtpdIngressTLSNoSecret(t *testing.T) {
 
 	options := &helm.Options{
@@ -158,23 +142,4 @@ func TestXmtpdIngressTLSSecretNoCreate(t *testing.T) {
 
 	secret := extractNamedSecretE(t, output, "my-secret")
 	assert.Nil(t, secret)
-}
-
-func TestXmtpdIngressTLSSecretCreate(t *testing.T) {
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"ingress.create":                "true",
-			"ingress.tls.certIssuer":        "cert-manager",
-			"ingress.tls.secretName":        "my-secret",
-			"ingress.host":                  "my-host",
-			"ingress.tls.createEmptySecret": "true",
-		},
-	}
-
-	output := helm.RenderTemplate(t, options, testlib.XMTPD_HELM_CHART_PATH, "release-name", []string{})
-
-	secret := extractNamedSecret(t, output, "my-secret")
-
-	assert.Equal(t, v2.SecretTypeTLS, secret.Type)
 }

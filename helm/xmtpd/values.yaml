@@ -35,12 +35,9 @@ ingress:
   name: ""
   host: ""
   className: nginx
-  # set static-IP if being used by the cloud provider
-  # globalStaticIPName: xmtpd-static-ip
   tls: {}
     # certIssuer: letsencrypt-production
     # secretName: tls-certs
-    # createEmptySecret: true
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/

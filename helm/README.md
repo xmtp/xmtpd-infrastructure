@@ -73,75 +73,6 @@ xmtpd-api-7dd49f6b88-mfwls                1/1     Running   0          4h56m
 xmtpd-sync-7dd49f6b88-dn28d               1/1     Running   0          4h56m
 ```
 
-### Kubernetes Ingress
-
-We provide an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) for the XMTPD service.
-It's specific configuration will depend on the type of cloud being used.
-It can:
- - expose an external IP address
- - handle TLS termination
- - load balance and route
-
-To enable the ingress, you have to set:
-```yaml
-ingress:
-  enable: true
-  className: <your ingress controller>
-```
-
-The class name will depend on the type of [Ingress Controller](
-https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) that your environment supports.
-
-The ingress will automatically route all traffic to the `xmtpd service`.
-
-#### GCP Static IPs
-
-If you are using a `static public IP address` in GCP, you can set it to automatically use the IP in the `gce` controller such as:
-```yaml
-ingress:
-  globalStaticIPName: <xmtpd-static-ip>
-```
-Creating static IP addresses in GCP is as easy as:
-```bash
-gcloud compute addresses create xmtpd-static-ip --global
-```
-
-#### TLS Termination
-
-One of the easiest ways to terminate TLS is to use [`Let's Encrypt cert-manager`](https://cert-manager.io/docs/getting-started/).
-The configuration will depend on your cloud provider.
-
-To configure the ingress to use `cert-manager`, set the following:
-```yaml
-ingress:
-  host: <example.com>
-  tls:
-    certIssuer: <letsencrypt-production>
-    secretName: <tls-certs>
-    createEmptySecret: true
-```
-
-To install the `cert-manager` follow its [documentation](https://artifacthub.io/packages/helm/cert-manager/cert-manager).
-
-In short, the steps look roughly like this:
-```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
-helm repo add jetstack https://charts.jetstack.io --force-update
-helm install cert-manager --namespace cert-manager --version v1.16.2 jetstack/cert-manager --set global.leaderElection.namespace="cert-manager"
-```
-
-The default leader election namespace will [not work in GKE with autopilot](https://github.com/kubernetes-sigs/kubespray/pull/8424).
-
-After a few minutes, you should see your secret populated with correct data:
-```shell
-k get secret <tls-certs> -o=yaml
-apiVersion: v1
-data:
-  tls.crt: <data>
-  tls.key: <data>
-kind: Secret
-
-```
 
 ## XMTP Payer Helm Chart Installation
 
@@ -167,3 +98,45 @@ NAME                                      READY   STATUS    RESTARTS   AGE
 xmtp-payer-7978dbcb8-mnvxx                1/1     Running   0          9m48s
 xmtp-payer-7978dbcb8-vkwsv                1/1     Running   0          9m48s
 ```
+
+## Kubernetes Ingress
+
+We provide an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) for both XMTP services.
+It's specific configuration will depend on the type of cloud being used.
+It can:
+- expose an external IP address
+- handle TLS termination
+- load balance and route
+
+To enable the ingress, you have to set:
+```yaml
+# filename xmtpd.yaml
+ingress:
+  enable: true
+  className: <your ingress controller>
+```
+
+The class name will depend on the type of [Ingress Controller](
+https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) that your environment supports.
+
+The ingress will automatically route all traffic to the `xmtpd service`.
+
+We recommend using the [`nginx ingress controller`](https://kubernetes.github.io/ingress-nginx/)
+
+### TLS Termination
+
+One of the easiest ways to terminate TLS is to use [`Let's Encrypt cert-manager`](https://cert-manager.io/docs/getting-started/).
+The configuration will depend on your cloud provider.
+
+To configure the ingress to use `cert-manager`, set the following:
+```yaml
+ingress:
+  enable: true
+  className: <your ingress controller>
+  host: <example.com>
+  tls:
+    certIssuer: <letsencrypt-production>
+    secretName: <tls-certs>
+```
+
+For a comprehensive guide on how to terminate TLS in GKE, you can read our [GKE+Let'Encrypt+NGINX Howto](../doc/nginx-cert-gke.md)

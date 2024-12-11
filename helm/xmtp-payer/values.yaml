@@ -82,9 +82,6 @@ ingress:
   name: ""
   host: ""
   className: nginx
-  # set static-IP if being used by the cloud provider
-  # globalStaticIPName: xmtpd-static-ip
   tls: {}
     # certIssuer: letsencrypt-production
     # secretName: payer-tls-certs
-    # createEmptySecret: true
