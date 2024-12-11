@@ -40,16 +40,16 @@ spec:
             {{- include "helpers.list-env-variables" . | indent 12 }}
           ports:
             - name: grpc
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           startupProbe:
             grpc:
-              port: {{ .Values.service.port }}
+              port: {{ .Values.service.targetPort }}
             failureThreshold: 3
             periodSeconds: 10
           livenessProbe:
             grpc:
-              port: {{ .Values.service.port }}
+              port: {{ .Values.service.targetPort }}
             failureThreshold: 3
             periodSeconds: 10
           resources:

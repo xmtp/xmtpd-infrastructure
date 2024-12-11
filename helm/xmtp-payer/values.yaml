@@ -1,7 +1,7 @@
 # Default values for xmtpd.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-replicaCount: 2
+replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
@@ -50,7 +50,8 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 5050
+  port: 80
+  targetPort: 5050
 
 resources: {}
   # limits:
@@ -71,3 +72,16 @@ secret:
 
 env:
   secret: []
+
+
+ingress:
+  # Specifies whether a service account should be created
+  create: false
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  host: ""
+  className: nginx
+  tls: {}
+    # certIssuer: letsencrypt-production
+    # secretName: payer-tls-certs

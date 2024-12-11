@@ -31,5 +31,5 @@ func TestKubernetesBasicPayerInstall(t *testing.T) {
 	}
 
 	defer testlib.Teardown(testlib.TEARDOWN_PAYER)
-	testlib.StartPayer(t, &options, 2, namespace)
+	testlib.StartPayer(t, &options, 1, namespace)
 }
