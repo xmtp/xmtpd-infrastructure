@@ -85,7 +85,7 @@ There are other resources that are out of scope of this document.
 ### Cluster Issuers
 An Issuer defines how cert-manager will request TLS certificates.
 Issuers are specific to a single namespace in Kubernetes, but the ClusterIssuer is a cluster-wide version.
-For convenience, we are using `ClusterIssuers`
+For convenience, we are using `ClusterIssuers`.
 
 ### Certificates
 Certificates resources allow you to specify the details of the certificate you want to request.
@@ -280,7 +280,7 @@ To validate, check for the existence of the Ingress:
 ```bash
 kubectl get ing
 NAME               CLASS   HOSTS                          ADDRESS          PORTS     AGE
-xmtpd              nginx   grpc.xmtp-partners.xyz    35.202.107.198   80, 443   17h
+xmtpd              nginx   grpc.xmtp-partners.xyz         35.202.107.198   80, 443   17h
 ```
 
 It might take a few minutes for the Ingress to populate.
