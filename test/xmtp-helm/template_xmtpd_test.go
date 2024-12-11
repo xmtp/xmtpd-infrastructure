@@ -65,15 +65,6 @@ func extractNamedSecretE(t *testing.T, output string, secretName string) *v2.Sec
 	return nil
 }
 
-func extractNamedSecret(t *testing.T, output string, secretName string) *v2.Secret {
-	secret := extractNamedSecretE(t, output, secretName)
-	if secret == nil {
-		t.Fatalf("Could not extract secret %s from template", secretName)
-	}
-
-	return secret
-}
-
 func TestXmtpdEmpty(t *testing.T) {
 	options := &helm.Options{
 		SetValues: map[string]string{},
