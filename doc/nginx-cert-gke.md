@@ -200,7 +200,7 @@ For this reason, you'll start by working with the Let's Encrypt staging issuer. 
 
     ```yaml
     apiVersion: cert-manager.io/v1
-    kind: Issuer
+    kind: ClusterIssuer
     metadata:
       name: letsencrypt-staging
     spec:
@@ -219,7 +219,7 @@ For this reason, you'll start by working with the Let's Encrypt staging issuer. 
                 class: nginx
     ---
     apiVersion: cert-manager.io/v1
-    kind: Issuer
+    kind: ClusterIssuer
     metadata:
       name: letsencrypt-prod
     spec:
