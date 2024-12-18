@@ -114,7 +114,6 @@ func getLastSection(envKey string) string {
 // 3. Default values.
 func GetDefaultSecrets(t *testing.T) map[string]string {
 	defaultSecrets := map[string]string{
-		"env.secret.XMTPD_DB_WRITER_CONNECTION_STRING":        "<replace-me>",
 		"env.secret.XMTPD_SIGNER_PRIVATE_KEY":                 "<replace-me>",
 		"env.secret.XMTPD_PAYER_PRIVATE_KEY":                  "<replace-me>",
 		"env.secret.XMTPD_CONTRACTS_RPC_URL":                  "https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/",
