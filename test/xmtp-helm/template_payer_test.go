@@ -4,7 +4,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/assert"
 	"github.com/xmtp/xmtpd-infrastructure/v1/test/testlib"
-	v1 "k8s.io/api/networking/v1"
+	netv1 "k8s.io/api/networking/v1"
 	"testing"
 )
 
@@ -14,9 +14,8 @@ func TestPayerEmpty(t *testing.T) {
 	}
 	output := helm.RenderTemplate(t, options, testlib.XMTP_PAYER_HELM_CHART_PATH, "release-name", []string{})
 
-	ingress := extractIngressE(t, output)
+	ingress := testlib.ExtractIngressE(t, output)
 	assert.Nil(t, ingress)
-
 }
 
 func TestPayerEnableIngress(t *testing.T) {
@@ -29,7 +28,7 @@ func TestPayerEnableIngress(t *testing.T) {
 
 	output := helm.RenderTemplate(t, options, testlib.XMTP_PAYER_HELM_CHART_PATH, "release-name", []string{})
 
-	ingress := extractIngress(t, output)
+	ingress := testlib.ExtractIngress(t, output)
 	assert.Contains(t, ingress.Annotations, "kubernetes.io/ingress.class")
 	assert.Equal(t, "nginx", *ingress.Spec.IngressClassName)
 }
@@ -45,7 +44,7 @@ func TestPayerIngressTLSNoSecret(t *testing.T) {
 
 	output := helm.RenderTemplate(t, options, testlib.XMTP_PAYER_HELM_CHART_PATH, "release-name", []string{})
 
-	ingress := extractIngress(t, output)
+	ingress := testlib.ExtractIngress(t, output)
 	assert.Contains(t, ingress.Annotations, "cert-manager.io/cluster-issuer")
 	assert.Equal(t, "cert-manager", ingress.Annotations["cert-manager.io/cluster-issuer"])
 	assert.Empty(t, ingress.Spec.TLS)
@@ -64,16 +63,33 @@ func TestPayerIngressTLSSecretNoCreate(t *testing.T) {
 
 	output := helm.RenderTemplate(t, options, testlib.XMTP_PAYER_HELM_CHART_PATH, "release-name", []string{})
 
-	ingress := extractIngress(t, output)
+	ingress := testlib.ExtractIngress(t, output)
 	assert.Contains(t, ingress.Annotations, "cert-manager.io/cluster-issuer")
 	assert.Equal(t, "cert-manager", ingress.Annotations["cert-manager.io/cluster-issuer"])
 
-	expectedTLS := v1.IngressTLS{
+	expectedTLS := netv1.IngressTLS{
 		Hosts:      []string{"my-host"},
 		SecretName: "my-secret",
 	}
 	assert.Contains(t, ingress.Spec.TLS, expectedTLS)
 
-	secret := extractNamedSecretE(t, output, "my-secret")
+	secret := testlib.ExtractNamedSecretE(t, output, "my-secret")
 	assert.Nil(t, secret)
+}
+
+func TestPayerMax1Replica(t *testing.T) {
+	// once we have fixed https://github.com/xmtp/xmtpd/issues/334, this should be adjusted
+
+	options := &helm.Options{
+		SetValues: map[string]string{
+			"replicas": "7",
+		},
+	}
+	output := helm.RenderTemplate(t, options, testlib.XMTP_PAYER_HELM_CHART_PATH, "release-name", []string{})
+
+	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtp-payer")
+
+	assert.EqualValues(t, 1, *deployment.Spec.Replicas)
+	assert.NotNil(t, deployment.Spec.Strategy.RollingUpdate)
+
 }
