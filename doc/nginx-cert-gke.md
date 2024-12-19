@@ -116,6 +116,10 @@ The resource references an issuer to define how the certificate is issued.
 To install cert-manager, run:
 
 ```bash
+helm repo add jetstack https://charts.jetstack.io --force-update
+```
+
+```bash
 helm install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
