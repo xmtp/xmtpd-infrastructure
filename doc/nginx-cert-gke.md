@@ -116,12 +116,18 @@ The resource references an issuer to define how the certificate is issued.
 To install cert-manager, run:
 
 ```bash
+helm repo add jetstack https://charts.jetstack.io --force-update
+```
+
+```bash
 helm install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
   --version v1.16.2 \
-  --set crds.enabled=true
+  --set crds.enabled=true \
+  --set cainjector.enabled=true \
+  --set global.leaderElection.namespace="cert-manager"
 ```
 
 In some cases, the CRDs won't be installed properly. In this case, you can install them directly from static files:
