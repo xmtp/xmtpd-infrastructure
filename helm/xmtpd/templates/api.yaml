@@ -36,14 +36,11 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--replication.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0"]
+          {{- if (include "helpers.list-env-variables" .) }}
           env:
-            - name: XMTPD_REPLICATION_ENABLE
-              value: "true"
-            - name: XMTPD_METRICS_ENABLE
-              value: "true"
-            - name: XMTPD_METRICS_METRICS_ADDRESS
-              value: "0.0.0.0"
-            {{- include "helpers.list-env-variables" . | indent 12 }}
+            {{ include "helpers.list-env-variables" . | indent 12 }}
+          {{- end }}
           ports:
             - name: grpc
               containerPort: {{ .Values.service.targetPort }}

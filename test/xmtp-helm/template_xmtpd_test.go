@@ -77,3 +77,29 @@ func TestXmtpdIngressTLSSecretNoCreate(t *testing.T) {
 	secret := testlib.ExtractNamedSecretE(t, output, "my-secret")
 	assert.Nil(t, secret)
 }
+
+func TestXmtpdNoEnvWorks(t *testing.T) {
+
+	options := &helm.Options{}
+
+	output := helm.RenderTemplate(t, options, testlib.XMTPD_HELM_CHART_PATH, "release-name", []string{})
+	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtpd")
+
+	assert.NotNil(t, deployment)
+	assert.Empty(t, deployment.Spec.Template.Spec.Containers[0].Env)
+}
+
+func TestXmtpdEnvWorks(t *testing.T) {
+
+	options := &helm.Options{
+		SetValues: map[string]string{
+			"env.secret.XMTPD_LOG_LEVEL": "debug",
+		},
+	}
+
+	output := helm.RenderTemplate(t, options, testlib.XMTPD_HELM_CHART_PATH, "release-name", []string{})
+	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtpd")
+
+	assert.NotNil(t, deployment)
+	assert.NotEmpty(t, deployment.Spec.Template.Spec.Containers[0].Env)
+}
