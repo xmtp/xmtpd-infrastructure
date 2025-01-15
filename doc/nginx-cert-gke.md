@@ -197,7 +197,7 @@ In this tutorial, you'll set up two issuers for Let's Encrypt: Staging and produ
 
 The Let's Encrypt production issuer has [very strict rate limits](https://letsencrypt.org/docs/rate-limits/). When you're experimenting and learning, you can easily hit those limits.
 
-For this reason, you'll start by working with the Let's Encrypt staging issuer. Once you're happy that it's working correctly, yo can switch to using the production issuer.
+For this reason, you'll start by working with the Let's Encrypt staging issuer. Once you're happy that it's working correctly, you can switch to using the production issuer.
 
 > [!NOTE]
 > You'll see a warning about untrusted certificates from the staging issuer, but this is expected.
