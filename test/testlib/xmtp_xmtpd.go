@@ -36,7 +36,7 @@ func StartXMTPD(t *testing.T, options *helm.Options, replicaCount int, namespace
 
 type XMTPDInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep MLSInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
+func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep XMTPDInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName = releaseName
