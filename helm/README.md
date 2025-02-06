@@ -13,6 +13,14 @@ To add the XMTPD charts to your local helm repository, clone this repository loc
 
 Eventually XMTP will provide a public Helm Charts release.
 
+## 0) Alchemy Account
+
+To run a node, you will need to have an [Alchemy Account](https://www.alchemy.com/).
+You can follow their docs on the [API Key Creation](https://docs.alchemy.com/docs/alchemy-quickstart-guide#1key-create-an-alchemy-api-key).
+
+Once logged in, you can find and enable the [XMTP Chain](https://dashboard.alchemy.com/chains/xmtp).
+Find and copy the XMTP app HTTP endpoint along with its API key. It should be in the format `https://xmtp-testnet.g.alchemy.com/v2/<apikey>`
+
 ## 1) Dependencies
 
 XMTPD needs a Postgres database to be running accessible from the cluster.
@@ -44,12 +52,12 @@ env:
     XMTPD_DB_WRITER_CONNECTION_STRING: "<postgres://postgres:postgres@pg-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable>"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
     XMTPD_PAYER_PRIVATE_KEY: "<private-key>"
-    XMTPD_CONTRACTS_RPC_URL: "<https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/>"
+    XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "<http://mls-validation-service.default.svc.cluster.local:50051>"
-    XMTPD_CONTRACTS_CHAIN_ID: "34498"
-    XMTPD_CONTRACTS_NODES_ADDRESS: "<nodes-address>"
-    XMTPD_CONTRACTS_MESSAGES_ADDRESS: "<messages-address>"
-    XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS: "<identity-address>"
+    XMTPD_CONTRACTS_CHAIN_ID: "241320161"
+    XMTPD_CONTRACTS_NODES_ADDRESS: "<0x390D339A6C0Aa432876B5C898b16287Cacde2A0A>"
+    XMTPD_CONTRACTS_MESSAGES_ADDRESS: "<0x162f2d4d96565437F47bfB7a0BF8AC4FF481Bbf6>"
+    XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS: "<0x00e92e15AB0D7d3aA5c76bceCcE675DcAf311189>"
     XMTPD_METRICS_ENABLE: "true"
     XMTPD_REFLECTION_ENABLE: "true"
     XMTPD_LOG_LEVEL: "debug"
