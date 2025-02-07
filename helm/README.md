@@ -28,18 +28,17 @@ Both services support multiple replicas for high availability. However, adding r
 
 Before diving into the installation process, ensure you have the following:
 
-1. **Docker Desktop**: To learn more, see [Docker](https://www.docker.com/get-started/).
-2. **Kubernetes cluster**: A running Kubernetes cluster with sufficient resources. To learn more, see [Kubernetes documentation](https://kubernetes.io/docs/home/).
-3. **Helm**: A package manager for Kubernetes. To learn more, see [Helm documentation](https://helm.sh/docs/).
+1. **Kubernetes cluster**: A running Kubernetes cluster with sufficient resources. To learn more, see [Kubernetes documentation](https://kubernetes.io/docs/home/). If you want to test the charts locally, you can use [Docker Desktop](https://www.docker.com/get-started/)
+2. **Helm**: A package manager for Kubernetes. To learn more, see [Helm documentation](https://helm.sh/docs/).
    ```bash
    brew install helm
    ```
-4. **PostgreSQL database**: xmtpd relies on a PostgreSQL database. Tools like Bitnami’s [PostgreSQL Helm Charts](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) can simplify database provisioning. xmtpd has been tested with Postgres versions 13 and newer. To learn more, see [PostgreSQL documentation](https://www.postgresql.org/docs/).
+3. **PostgreSQL database**: xmtpd relies on a PostgreSQL database. Tools like Bitnami’s [PostgreSQL Helm Charts](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) can simplify database provisioning. xmtpd has been tested with Postgres versions 13 and newer. To learn more, see [PostgreSQL documentation](https://www.postgresql.org/docs/).
    ```bash
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo update
     ```
-5. Clone the [xmtpd-infrastructure](https://github.com/xmtp/xmtpd-infrastructure) repo.
+4. Clone the [xmtpd-infrastructure](https://github.com/xmtp/xmtpd-infrastructure) repo.
 
 ## Step 1. Get an Alchemy account
 
@@ -50,6 +49,8 @@ To run xmtpd, you need an Alchemy account.
 2. Go to the [XMTP Chain page](https://dashboard.alchemy.com/chains/xmtp) and set the **Network Status** to ***Enabled***.
 
 3. In the **API URL** column, click **Copy** to copy the XMTP app HTTPs endpoint along with its API key. It should use the format `https://xmtp-testnet.g.alchemy.com/v2/<apikey>`.
+
+4. You will use this endpoint for the `XMTPD_CONTRACTS_RPC_URL` config option
 
 ## Step 2: Register your node
 
@@ -152,12 +153,12 @@ env:
     XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://<username>:<password>@<host-service>:<port>/<database>?sslmode=disable"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
     XMTPD_PAYER_PRIVATE_KEY: "<private-key>"
-    XMTPD_CONTRACTS_RPC_URL: "https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/"
+    XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
-    XMTPD_CONTRACTS_CHAIN_ID: "34498"
-    XMTPD_CONTRACTS_NODES_ADDRESS: "<ask-xmtp-for-nodes-address>"
-    XMTPD_CONTRACTS_MESSAGES_ADDRESS: "<ask-xmtp-for-messages-address>"
-    XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS: "<ask-xmtp-for-identity-address>"
+    XMTPD_CONTRACTS_CHAIN_ID: "241320161"
+    XMTPD_CONTRACTS_NODES_ADDRESS: "0x390D339A6C0Aa432876B5C898b16287Cacde2A0A"
+    XMTPD_CONTRACTS_MESSAGES_ADDRESS: "<0x162f2d4d96565437F47bfB7a0BF8AC4FF481Bbf6"
+    XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS: "0x00e92e15AB0D7d3aA5c76bceCcE675DcAf311189"
     XMTPD_METRICS_ENABLE: "true"
     XMTPD_REFLECTION_ENABLE: "true"
     XMTPD_LOG_LEVEL: "debug"
@@ -172,9 +173,9 @@ Replace placeholder values with actual credentials and configurations:
     - Replace `<port>` with the port for pg-postgresql. The default value is usually `5432`.
     
     If you are following the setup steps in this document, the full connection string will be: `postgres://postgres:postgres@postgres-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable`
-    
+- Replace `<apikey>` with your full Alchemy URL    
 - Replace `<private-key>` with the private key for your registered node.
-- Ask the XMTP team for the following address values:
+- Ask the XMTP team to confirm the following address values:
     - Nodes address
     - Messages address
     - Identity updates address
@@ -204,6 +205,72 @@ pg-postgresql-0                           1/1     Running   0          6h26m
 xmtpd-api-7dd49f6b88-mfwls                1/1     Running   0          4h56m
 xmtpd-sync-7dd49f6b88-mfwls               1/1     Running   0          4h56m
 ```
+
+## XMTP Payer Helm Chart Installation
+
+If you are a XMTPD Node operator, you will not need to run the Payer service.
+This service might be required by application developers that work on top of the XMTP protocol.
+
+The payer service does not depend on the XMTPD service, a database, or the MLS service.
+It does require access to the public internet to read state from the blockchain.
+It also requires write access to all known XMTP nodes in the cluster.
+
+As of XMTPD docker image v0.1.1, all services require the same configuration options even though some might be unused.
+As such, you can reuse the same config that we described in [Step 4](#Step-4-Install-the-xmtpd-node).
+
+Install the helm chart
+```bash
+helm install xmtp-payer xmtp-payer/ -f xmtpd.yaml
+```
+Once you have successfully installed the chart, you should see 1 pod running.
+You can confirm via:
+```bash
+$ kubectl get pods
+NAME                                      READY   STATUS    RESTARTS   AGE
+xmtp-payer-7978dbcb8-mnvxx                1/1     Running   0          9m48s
+```
+
+## Kubernetes Ingress
+
+We provide an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) for both XMTP services.
+It's specific configuration will depend on the type of cloud being used.
+It can:
+- expose an external IP address
+- handle TLS termination
+- load balance and route
+
+To enable the ingress, you have to set:
+```yaml
+# filename xmtpd.yaml
+ingress:
+  enable: true
+  className: <your ingress controller>
+```
+
+The class name will depend on the type of [Ingress Controller](
+https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) that your environment supports.
+
+The ingress will automatically route all traffic to the `xmtpd service`.
+
+We recommend using the [`nginx ingress controller`](https://kubernetes.github.io/ingress-nginx/)
+
+### TLS Termination
+
+One of the easiest ways to terminate TLS is to use [`Let's Encrypt cert-manager`](https://cert-manager.io/docs/getting-started/).
+The configuration will depend on your cloud provider.
+
+To configure the ingress to use `cert-manager`, set the following:
+```yaml
+ingress:
+  enable: true
+  className: <your ingress controller>
+  host: <example.com>
+  tls:
+    certIssuer: <letsencrypt-production>
+    secretName: <tls-certs>
+```
+
+For a comprehensive guide on how to terminate TLS in GKE, you can read our [GKE+Let'Encrypt+NGINX Howto](../doc/nginx-cert-gke.md)
 
 ## What’s next
 
