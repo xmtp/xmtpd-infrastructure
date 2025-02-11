@@ -7,11 +7,11 @@ This repository provides infrastructure-as-code examples and tooling to help nod
 Each node should be configured for high availability (HA) across all required components, including the database, xmtpd, and the MLS validation service.
 
 Database:
+- 1vCPU
+- 8GB RAM
 - Postgres 16.0 or newer
 - 20ms commit latency
 - 250MB/s throughput
-- 8GB RAM
-- 1vCPU
 
 xmtpd:
 - 2vCPU
