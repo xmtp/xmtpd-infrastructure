@@ -10,7 +10,7 @@ Database:
 - Postgres 16.0 or newer
 - 20ms commit latency
 - 250MB/s throughput
-- XXXXX RAM
+- 8GB RAM
 - XXXXX CPUs
 
 xmtpd:
