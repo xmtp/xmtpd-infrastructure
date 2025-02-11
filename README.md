@@ -2,6 +2,26 @@
 
 This repository provides infrastructure-as-code examples and tooling to help node operators deploy and manage xmtpd nodes. xmtpd (XMTP daemon) is the node software that powers the testnet and will power the mainnet of the decentralized XMTP network.
 
+## Minimum system requirements
+
+Each node should be configured for high availability (HA) across all required components, including the database, xmtpd, and the MLS validation service.
+
+Database:
+- 2vCPU
+- 8GB RAM
+- Postgres 16.0 or newer
+- 20ms commit latency
+- 250MB/s throughput
+
+xmtpd:
+- 2vCPU
+- 2GiB memory
+- 1GB/s network link
+
+MLS validation service:
+- 2vCPU
+- 512MiB memory
+
 ## Available tooling
 
 - [Helm charts](./helm/README.md) - Deploy xmtpd nodes on Kubernetes clusters
