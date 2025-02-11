@@ -11,7 +11,7 @@ Database:
 - 20ms commit latency
 - 250MB/s throughput
 - 8GB RAM
-- XXXXX CPUs
+- 1vCPU
 
 xmtpd:
 - 2vCPU
