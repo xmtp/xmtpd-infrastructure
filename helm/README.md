@@ -152,7 +152,6 @@ env:
   secret:
     XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://<username>:<password>@<host-service>:<port>/<database>?sslmode=disable"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
-    XMTPD_PAYER_PRIVATE_KEY: "<private-key>"
     XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
     XMTPD_CONTRACTS_CHAIN_ID: "241320161"
@@ -215,8 +214,9 @@ The payer service does not depend on the XMTPD service, a database, or the MLS s
 It does require access to the public internet to read state from the blockchain.
 It also requires write access to all known XMTP nodes in the cluster.
 
-As of XMTPD docker image v0.1.1, all services require the same configuration options even though some might be unused.
-As such, you can reuse the same config that we described in [Step 4](#Step-4-Install-the-xmtpd-node).
+You can use the config defined in [Step 4](#Step-4-Install-the-xmtpd-node) as a starting point.
+Set `XMTPD_PAYER_PRIVATE_KEY` to a key to a wallet that has been funded and can be used to pay for
+blockchain messages and XMTP system messages.
 
 Install the helm chart
 ```bash
