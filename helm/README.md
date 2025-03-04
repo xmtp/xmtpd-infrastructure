@@ -101,7 +101,7 @@ docker run ghcr.io/xmtp/xmtpd-cli:latest get-pub-key --private-key 0xa9b48d687f4
 
 ### **Step 2.2: Provide your node public key and address**
 
-Send your node public key and address to `securitycouncil.xmtp.eth`.
+Send your node public key and address to [sec-council@xmtp.org](mailto:sec-council@xmtp.org) to register your node.
 
 Ensure that public key and address values are correct because once registered, they are immutable and cannot be changed.
 
@@ -204,6 +204,9 @@ pg-postgresql-0                           1/1     Running   0          6h26m
 xmtpd-api-7dd49f6b88-mfwls                1/1     Running   0          4h56m
 xmtpd-sync-7dd49f6b88-mfwls               1/1     Running   0          4h56m
 ```
+
+> [!TIP]
+> If you see a `no matching public key found in registry` error, you can resolve it by [registering your node](#step-2-register-your-node).
 
 ## XMTP Payer Helm Chart Installation
 
