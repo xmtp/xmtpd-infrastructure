@@ -20,7 +20,7 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        app.kubernetes.io/role: sync
+        app.kubernetes.io/role: xmtpd-server-sync
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -40,6 +40,9 @@ spec:
           env:
             {{ include "helpers.list-env-variables" . | indent 12 }}
           {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 8008
           readinessProbe:
             httpGet:
               path: /metrics

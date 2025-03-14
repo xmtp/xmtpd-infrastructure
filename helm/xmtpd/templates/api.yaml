@@ -20,7 +20,7 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        app.kubernetes.io/role: api
+        app.kubernetes.io/role: xmtpd-server-api
 
     spec:
       {{- with .Values.imagePullSecrets }}
@@ -45,6 +45,8 @@ spec:
             - name: grpc
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+            - name: metrics
+              containerPort: 8008
           startupProbe:
             grpc:
               port: {{ .Values.service.targetPort }}
