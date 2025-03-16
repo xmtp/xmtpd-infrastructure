@@ -1,14 +1,15 @@
-# Tutorial: Setting Up Prometheus Service Discovery for XMTPD in Kubernetes Using Helm
+# Tutorial: Set up Prometheus service discovery for xmtpd in Kubernetes using Helm
 
-## **Introduction**
-This tutorial walks you through setting up **Prometheus service discovery** for **XMTPD** in a Kubernetes cluster using **Helm**. By the end of this guide, Prometheus will automatically discover XMTPD pods and scrape their metrics.
+## Introduction
 
-## **Prerequisites**
+This tutorial walks you through setting up **Prometheus service discovery** for **xmtpd** in a Kubernetes cluster using **Helm**. By the end of this guide, Prometheus will automatically discover xmtpd pods and scrape their metrics.
+
+## Prerequisites
+
 Before proceeding, ensure you have the following:
-- A running **Kubernetes cluster**.
-- `kubectl` installed and configured for your cluster.
-- **Helm** installed (Kubernetes package manager).
-
+- A running **Kubernetes cluster**
+- `kubectl` installed and configured for your cluster
+- **Helm** installed (Kubernetes package manager)
 
 ## Step 1. Install Helm
 
@@ -24,7 +25,7 @@ brew install kubernetes-helm
 
 Prometheus is an open-source monitoring and alerting toolkit. To set it up in Kubernetes, we will use the kube-prometheus-stack Helm chart.
 
-### Add the Prometheus Helm Repository
+### Add the Prometheus Helm repository
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -32,6 +33,7 @@ helm repo update
 ```
 
 ### Install Prometheus
+
 ```bash
 helm install prometheus prometheus-community/kube-prometheus-stack --namespace default
 ```
@@ -43,27 +45,31 @@ This will install Prometheus along with necessary exporters and Grafana.
 - **Various Kubernetes exporters** for collecting cluster metrics
 
 Check if Prometheus pods are running:
+
 ```bash
 kubectl get pods -l app.kubernetes.io/name=prometheus -n default
 ```
 
-## Step 3. Deploy XMTPD
+## Step 3. Deploy xmtpd
 
-XMTPD is the XMTP network's distributed messaging daemon.
-Follow the dedicated installation guide in [XMTPD Helm Charts](../helm/README.md) to deploy it.
+xmtpd is the XMTP network's distributed messaging daemon.
 
-Once installed, verify the XMTPD pods are running:
+Follow [Install xmtpd on Kubernetes using Helm charts](../helm/README.md) to deploy it.
+
+Once installed, verify the xmtpd pods are running:
+
 ```bash
 kubectl get pods -l app.kubernetes.io/name=xmtpd -n default
 ```
 
-## Step 4. Configure Prometheus to discover XMTPD
+## Step 4. Configure Prometheus to discover xmtpd
 
-To enable Prometheus to **automatically discover XMTPD pods** and scrape metrics, we will use a **PodMonitor**.
+To enable Prometheus to **automatically discover xmtpd pods** and scrape metrics, we will use a **PodMonitor**.
 
 ### Create a _PodMonitor_
 
 A PodMonitor instructs Prometheus to scrape metrics **directly from pods**, rather than through a service.
+
 Create a file named `xmtpd-podmonitor.yaml` in your local directory with the following content:
 
 ```yaml
@@ -96,17 +102,19 @@ spec:
 ```
 
 ### Apply the _PodMonitor_
+
 ```bash
 kubectl apply -f xmtpd-podmonitor.yaml
 ```
 
 ## Step 5. Validate the installation
 
-After setting up **Prometheus and PodMonitor**, verify that Prometheus is discovering XMTPD.
+After setting up **Prometheus and PodMonitor**, verify that Prometheus is discovering xmtpd.
 
-### Setup Prometheus UI
+### Set up Prometheus UI
 
 Port-forward the Prometheus service to access the UI:
+
 ```bash
 kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
 ```
@@ -114,14 +122,17 @@ kubectl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
 Now, open http://localhost:9090 in your browser.
 
 ### Verify the Service Discovery
+
 1. In the Prometheus UI, navigate to **Status > Targets**.
 2. Find your `xmtpd-podmonitor` target.
-3. Ensure it is **marked as "UP"**, which means Prometheus is successfully scraping metrics.
+3. Ensure it is **marked as "UP"** which means Prometheus is successfully scraping metrics.
 
 ## Conclusion
-You have successfully set up **Prometheus to monitor XMTPD** in your Kubernetes cluster. Prometheus now automatically discovers XMTPD pods and collects metrics.
+
+You have successfully set up **Prometheus to monitor xmtpd** in your Kubernetes cluster. Prometheus now automatically discovers xmtpd pods and collects metrics.
 
 ### Next Steps
-- Use **Grafana** to visualize XMTPD metrics.
+
+- Use **Grafana** to visualize xmtpd metrics.
 - Set up **alerts** in Prometheus to monitor for critical events.
 - Explore **Prometheus queries (PromQL)** to analyze collected metrics.
