@@ -123,7 +123,7 @@ Now, open http://localhost:9090 in your browser.
 
 ### Verify the Service Discovery
 
-1. In the Prometheus UI, navigate to **Status > Targets**.
+1. In the Prometheus UI, navigate to **Status > Target health**.
 2. Find your `xmtpd-podmonitor` target.
 3. Ensure it is **marked as "UP"** which means Prometheus is successfully scraping metrics.
 
@@ -131,7 +131,7 @@ Now, open http://localhost:9090 in your browser.
 
 You have successfully set up **Prometheus to monitor xmtpd** in your Kubernetes cluster. Prometheus now automatically discovers xmtpd pods and collects metrics.
 
-### Next Steps
+### Next steps
 
 - Use **Grafana** to visualize xmtpd metrics.
 - Set up **alerts** in Prometheus to monitor for critical events.
