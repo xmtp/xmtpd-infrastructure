@@ -124,7 +124,7 @@ For example, run:
 helm install postgres bitnami/postgresql --set auth.postgresPassword=postgres
 ```
 
-> [!INFO]
+> [!IMPORTANT]
 > For your convenience while testing this flow, this command sets the PostgresSQL database password to `postgres`. Be sure to set a secure password before going live on the XMTP testnet.
 
 You’ll use values in the response to update the `XMTPD_DB_WRITER_CONNECTION_STRING` value in your `xmtpd.yaml` configuration.
@@ -170,9 +170,10 @@ Replace placeholder values with actual credentials and configurations:
     - Replace `<password>` with the password for pg-postgresql. If the password includes a special character, be sure to URL encode it.
     - Replace `<host-service>` with `<helm-chart-name>-postgresql.<namespace>.svc.cluster.local`. The default value is usually `postgres-postgresql.default.svc.cluster.local`.
     - Replace `<port>` with the port for pg-postgresql. The default value is usually `5432`.
-    
+    - Replace `<database>` with the database name for pg-postgresql. The default value is usually `postgres`.
+
     If you are following the setup steps in this document, the full connection string will be: `postgres://postgres:postgres@postgres-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable`
-- Replace `<apikey>` with your full Alchemy URL    
+- Replace `<apikey>` with the key from your full Alchemy URL    
 - Replace `<private-key>` with the private key for your registered node.
 - Ask the XMTP team to confirm the following address values:
     - Nodes address
@@ -184,7 +185,13 @@ Replace placeholder values with actual credentials and configurations:
 Use Helm to deploy the xmtpd node. In the directory where you created your `xmtpd.yaml` configuration file, run:
 
 ```bash
-helm install xmtpd xmtpd/ -f xmtpd.yaml
+helm install <RELEASE_NAME> <CHART_PATH> -f <VALUES_FILE_PATH>
+```
+
+For example:
+
+```bash
+helm install xmtpd . -f xmtpd.yaml
 ```
 
 ## Step 5: Validate the installation
@@ -208,41 +215,50 @@ xmtpd-sync-7dd49f6b88-mfwls               1/1     Running   0          4h56m
 > [!TIP]
 > If you see a `no matching public key found in registry` error, you can resolve it by [registering your node](#step-2-register-your-node).
 
-## XMTP Payer Helm Chart Installation
+## Install the XMTP Payer Helm chart
 
-If you are a XMTPD Node operator, you will not need to run the Payer service.
-This service might be required by application developers that work on top of the XMTP protocol.
+> [!IMPORTANT]
+> xmptd node operators do not need to run the Payer service. This service might be required by developers building apps on XMTP.
 
-The payer service does not depend on the XMTPD service, a database, or the MLS service.
+The payer service does not depend on the xmtpd service, a database, or the MLS service.
+
 It does require access to the public internet to read state from the blockchain.
+
 It also requires write access to all known XMTP nodes in the cluster.
 
 You can use the config defined in [Step 4](#Step-4-Install-the-xmtpd-node) as a starting point.
-Set `XMTPD_PAYER_PRIVATE_KEY` to a key to a wallet that has been funded and can be used to pay for
-blockchain messages and XMTP system messages.
 
-Install the helm chart
+Set `XMTPD_PAYER_PRIVATE_KEY` to a key to a wallet that has been funded and can be used to pay for blockchain messages and XMTP system messages.
+
+### Install the Helm chart
+
 ```bash
 helm install xmtp-payer xmtp-payer/ -f xmtpd.yaml
 ```
+
 Once you have successfully installed the chart, you should see 1 pod running.
 You can confirm via:
+
 ```bash
-$ kubectl get pods
+kubectl get pods
+
 NAME                                      READY   STATUS    RESTARTS   AGE
 xmtp-payer-7978dbcb8-mnvxx                1/1     Running   0          9m48s
 ```
 
-## Kubernetes Ingress
+## Kubernetes ingress
 
 We provide an [ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) for both XMTP services.
-It's specific configuration will depend on the type of cloud being used.
-It can:
-- expose an external IP address
-- handle TLS termination
-- load balance and route
 
-To enable the ingress, you have to set:
+Its specific configuration will depend on the type of cloud being used.
+
+The Kubernetes ingress can:
+- Expose an external IP address
+- Handle TLS termination
+- Load balance and route
+
+To enable the ingress, set the following:
+
 ```yaml
 # filename xmtpd.yaml
 ingress:
@@ -251,18 +267,20 @@ ingress:
 ```
 
 The class name will depend on the type of [Ingress Controller](
-https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) that your environment supports.
+https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) your environment supports.
 
 The ingress will automatically route all traffic to the `xmtpd service`.
 
-We recommend using the [`nginx ingress controller`](https://kubernetes.github.io/ingress-nginx/)
+We recommend using the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/).
 
-### TLS Termination
+### Terminate TLS
 
-One of the easiest ways to terminate TLS is to use [`Let's Encrypt cert-manager`](https://cert-manager.io/docs/getting-started/).
+One of the easiest ways to terminate TLS is to use [Let's Encrypt cert-manager](https://cert-manager.io/docs/getting-started/).
+
 The configuration will depend on your cloud provider.
 
 To configure the ingress to use `cert-manager`, set the following:
+
 ```yaml
 ingress:
   enable: true
@@ -273,7 +291,7 @@ ingress:
     secretName: <tls-certs>
 ```
 
-For a comprehensive guide on how to terminate TLS in GKE, you can read our [GKE+Let'Encrypt+NGINX Howto](../doc/nginx-cert-gke.md)
+For a comprehensive guide on how to terminate TLS in GKE, see [Deploy xmtpd on Google Kubernetes Engine secured by SSL/TLS](../doc/nginx-cert-gke.md)
 
 ## What’s next
 
