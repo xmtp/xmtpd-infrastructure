@@ -89,7 +89,7 @@ func TestPayerMax1Replica(t *testing.T) {
 
 	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtp-payer")
 
-	assert.EqualValues(t, 1, *deployment.Spec.Replicas)
+	assert.EqualValues(t, 2, *deployment.Spec.Replicas) //expected 2 replicas to raise the cap during deployment for safeguard
 	assert.NotNil(t, deployment.Spec.Strategy.RollingUpdate)
 
 }
