@@ -1,0 +1,29 @@
+apiVersion: v1
+entries:
+  xmtp-payer:
+  - apiVersion: v2
+    appVersion: v0.2.0
+    created: "2025-04-08T11:47:28.431678-04:00"
+    description: A Helm chart for XMTP Payer
+    digest: 4da0ef971105fb77cf708d34d8c07354cc8ded97f03837d6c394182a01a3880a
+    maintainers:
+    - name: XMTPD
+    name: xmtp-payer
+    type: application
+    urls:
+    - https://github.com/xmtp/xmtpd-infrastructure/doc/charts/xmtp-payer-0.2.0.tgz
+    version: 0.2.0
+  xmtpd:
+  - apiVersion: v2
+    appVersion: v0.2.0
+    created: "2025-04-08T11:47:28.432456-04:00"
+    description: A Helm chart for XMTPD
+    digest: 6569e23bbacb894bcf46bf3dc6d8f0b071403b9097525fa5faf20c406f174563
+    maintainers:
+    - name: XMTPD
+    name: xmtpd
+    type: application
+    urls:
+    - https://github.com/xmtp/xmtpd-infrastructure/doc/charts/xmtpd-0.2.0.tgz
+    version: 0.2.0
+generated: "2025-04-08T11:47:28.431276-04:00"
