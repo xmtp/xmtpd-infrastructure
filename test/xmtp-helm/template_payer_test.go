@@ -76,20 +76,3 @@ func TestPayerIngressTLSSecretNoCreate(t *testing.T) {
 	secret := testlib.ExtractNamedSecretE(t, output, "my-secret")
 	assert.Nil(t, secret)
 }
-
-func TestPayerMax1Replica(t *testing.T) {
-	// once we have fixed https://github.com/xmtp/xmtpd/issues/334, this should be adjusted
-
-	options := &helm.Options{
-		SetValues: map[string]string{
-			"replicas": "7",
-		},
-	}
-	output := helm.RenderTemplate(t, options, testlib.XMTP_PAYER_HELM_CHART_PATH, "release-name", []string{})
-
-	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtp-payer")
-
-	assert.EqualValues(t, 1, *deployment.Spec.Replicas)
-	assert.NotNil(t, deployment.Spec.Strategy.RollingUpdate)
-
-}

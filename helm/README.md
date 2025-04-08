@@ -154,14 +154,12 @@ env:
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
     XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
-    XMTPD_CONTRACTS_CHAIN_ID: "241320161"
-    XMTPD_CONTRACTS_NODES_ADDRESS: "0x390D339A6C0Aa432876B5C898b16287Cacde2A0A"
-    XMTPD_CONTRACTS_MESSAGES_ADDRESS: "0x162f2d4d96565437F47bfB7a0BF8AC4FF481Bbf6"
-    XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS: "0x00e92e15AB0D7d3aA5c76bceCcE675DcAf311189"
     XMTPD_METRICS_ENABLE: "true"
     XMTPD_REFLECTION_ENABLE: "true"
     XMTPD_LOG_LEVEL: "debug"
 ```
+
+As of helm chart release `0.3.0` you do not have to specify contract addresses.
 
 Replace placeholder values with actual credentials and configurations:
 
@@ -191,7 +189,7 @@ helm install <RELEASE_NAME> <CHART_PATH> -f <VALUES_FILE_PATH>
 For example:
 
 ```bash
-helm install xmtpd . -f xmtpd.yaml
+helm install xmtpd xmtpd/ -f xmtpd.yaml
 ```
 
 ## Step 5: Validate the installation

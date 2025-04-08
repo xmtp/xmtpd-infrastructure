@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "xmtp-payer.labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "xmtp-payer.selectorLabels" . | nindent 6 }}
