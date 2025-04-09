@@ -41,7 +41,7 @@ Before diving into the installation process, ensure you have the following:
 
 4. **XMTP Helm Repository**: Fetch the pre-packaged repository
     ```bash
-    helm repo add xmtp  https://xmtp.github.io/xmtpd-infrastructure
+    helm repo add xmtp https://xmtp.github.io/xmtpd-infrastructure
     helm repo update
     ```
 
