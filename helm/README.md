@@ -38,7 +38,12 @@ Before diving into the installation process, ensure you have the following:
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo update
     ```
-4. Clone the [xmtpd-infrastructure](https://github.com/xmtp/xmtpd-infrastructure) repo.
+
+4. **XMTP Helm Repository**: Fetch the pre-packaged repository
+    ```bash
+    helm repo add xmtp  https://xmtp.github.io/xmtpd-infrastructure
+    helm repo update
+    ```
 
 ## Step 1. Get an Alchemy account
 
@@ -107,12 +112,16 @@ Ensure that public key and address values are correct because once registered, t
 
 ## Step 3: Set up dependencies
 
-### Check out the repository
-
+### Confirm you have the newest version of the charts
 ```bash
-git clone git@github.com:xmtp/xmtpd-infrastructure.git
-cd xmtpd-infrastructure/helm
+helm search repo xmtp
+NAME                            CHART VERSION   APP VERSION     DESCRIPTION                                 
+xmtp/xmtp-payer                 0.3.0           v0.3.0          A Helm chart for XMTP Payer                 
+xmtp/xmtpd                      0.3.0           v0.3.0          A Helm chart for XMTPD                      
+xmtp/mls-validation-service     0.1.0           v0.1.0          A Helm chart for XMTP MLS Validation Service
 ```
+
+If your versions are outdated, run `helm repo update`.
 
 ### Install the PostgreSQL database
 
@@ -133,10 +142,10 @@ You’ll use values in the response to update the `XMTPD_DB_WRITER_CONNECTION_ST
 
 The MLS validation service is a stateless, horizontally scalable service that xmtpd depends on.
 
-Install it using the Helm chart. To do this, run:
+Install it using the Helm chart from the repository. To do this, run:
 
 ```bash
-helm install mls-validation-service mls-validation-service/
+helm install mls-validation-service xmtp/mls-validation-service
 ```
 
 ## Step 4: Install the xmtpd node
@@ -173,23 +182,13 @@ Replace placeholder values with actual credentials and configurations:
     If you are following the setup steps in this document, the full connection string will be: `postgres://postgres:postgres@postgres-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable`
 - Replace `<apikey>` with the key from your full Alchemy URL    
 - Replace `<private-key>` with the private key for your registered node.
-- Ask the XMTP team to confirm the following address values:
-    - Nodes address
-    - Messages address
-    - Identity updates address
 
 ### Install xmtpd
 
-Use Helm to deploy the xmtpd node. In the directory where you created your `xmtpd.yaml` configuration file, run:
+Use Helm to deploy the xmtpd node from the repository. In the directory where you created your `xmtpd.yaml` configuration file, run:
 
 ```bash
-helm install <RELEASE_NAME> <CHART_PATH> -f <VALUES_FILE_PATH>
-```
-
-For example:
-
-```bash
-helm install xmtpd xmtpd/ -f xmtpd.yaml
+helm install xmtpd xmtp/xmtpd -f xmtpd.yaml
 ```
 
 ## Step 5: Validate the installation
@@ -231,7 +230,7 @@ Set `XMTPD_PAYER_PRIVATE_KEY` to a key to a wallet that has been funded and can 
 ### Install the Helm chart
 
 ```bash
-helm install xmtp-payer xmtp-payer/ -f xmtpd.yaml
+helm install xmtp-payer xmtp/xmtp-payer -f xmtpd.yaml
 ```
 
 Once you have successfully installed the chart, you should see 1 pod running.
