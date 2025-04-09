@@ -1,9 +1,22 @@
 apiVersion: v1
 entries:
+  mls-validation-service:
+  - apiVersion: v2
+    appVersion: v0.1.0
+    created: "2025-04-09T12:41:29.403963-04:00"
+    description: A Helm chart for XMTP MLS Validation Service
+    digest: 99e2ed2f0b597e097ecbd805a00c69d0dee1885bc82210e4671ae12a579224d1
+    maintainers:
+    - name: XMTPD
+    name: mls-validation-service
+    type: application
+    urls:
+    - https://xmtp.github.io/xmtpd-infrastructure/mls-validation-service-0.1.0.tgz
+    version: 0.1.0
   xmtp-payer:
   - apiVersion: v2
     appVersion: v0.3.0
-    created: "2025-04-09T12:37:02.092262-04:00"
+    created: "2025-04-09T12:41:29.404431-04:00"
     description: A Helm chart for XMTP Payer
     digest: 5829f4ec7322c9097db872d01adbbeb678727aa2fe8c846476e79833c3023f69
     maintainers:
@@ -15,7 +28,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: v0.2.0
-    created: "2025-04-09T12:37:02.091962-04:00"
+    created: "2025-04-09T12:41:29.404198-04:00"
     description: A Helm chart for XMTP Payer
     digest: 4da0ef971105fb77cf708d34d8c07354cc8ded97f03837d6c394182a01a3880a
     maintainers:
@@ -28,7 +41,7 @@ entries:
   xmtpd:
   - apiVersion: v2
     appVersion: v0.3.0
-    created: "2025-04-09T12:37:02.092792-04:00"
+    created: "2025-04-09T12:41:29.404834-04:00"
     description: A Helm chart for XMTPD
     digest: 881dba2bb5d3506c923c71acc800da940b7def27c3f8fa9d006b14320e77da0f
     maintainers:
@@ -40,7 +53,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: v0.2.0
-    created: "2025-04-09T12:37:02.092522-04:00"
+    created: "2025-04-09T12:41:29.40463-04:00"
     description: A Helm chart for XMTPD
     digest: 6569e23bbacb894bcf46bf3dc6d8f0b071403b9097525fa5faf20c406f174563
     maintainers:
@@ -50,4 +63,4 @@ entries:
     urls:
     - https://xmtp.github.io/xmtpd-infrastructure/xmtpd-0.2.0.tgz
     version: 0.2.0
-generated: "2025-04-09T12:37:02.091602-04:00"
+generated: "2025-04-09T12:41:29.403556-04:00"
