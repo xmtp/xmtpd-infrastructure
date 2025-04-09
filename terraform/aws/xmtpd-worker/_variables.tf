@@ -33,6 +33,7 @@ variable "service_config" {
     nodes_contract_address            = string
     messages_contract_address         = string
     identity_updates_contract_address = string
+    rates_registry_contract_address   = string
   })
 }
 

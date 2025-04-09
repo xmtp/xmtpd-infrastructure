@@ -48,10 +48,10 @@ verifier_chain_rpc_urls = {
     chain_rpc_324 = $POLYGON_MAINNET_RPC_URL
     chain_rpc_59144 = $LINEA_MAINNET_RPC_URL
 }
-
-nodes_contract_address = "0x390D339A6C0Aa432876B5C898b16287Cacde2A0A"
-messages_contract_address = "0x162f2d4d96565437F47bfB7a0BF8AC4FF481Bbf6"
-identity_updates_contract_address = "0x00e92e15AB0D7d3aA5c76bceCcE675DcAf311189"
+nodes_contract_address = "0xD37ccd1DD051491f106f8b0A954BDc9AdA6FC731"
+messages_contract_address = "0xfbf14ec1c268e64B256D705BCB78fb924795Cb81"
+identity_updates_contract_address = "0xfb62Bd1B340479568F9231972B69B3Fc536a2958"
+rates_registry_contract_address = "0x0fc90488076c5CA9a9cF7481085cd05d7F7d3221"
 chain_rpc_url = $XMTP_SEPOLIA_RPC_URL
 signer_private_key = $GENERATED_PRIVATE_KEY
 domain_name = $YOUR_NEW_DOMAIN_NAME
@@ -72,9 +72,10 @@ verifier_chain_rpc_urls = {
     chain_rpc_59144 = $LINEA_MAINNET_RPC_URL
 }
 
-nodes_contract_address = "0x390D339A6C0Aa432876B5C898b16287Cacde2A0A"
-messages_contract_address = "0x162f2d4d96565437F47bfB7a0BF8AC4FF481Bbf6"
-identity_updates_contract_address = "0x00e92e15AB0D7d3aA5c76bceCcE675DcAf311189"
+nodes_contract_address = "0xD37ccd1DD051491f106f8b0A954BDc9AdA6FC731"
+messages_contract_address = "0xfbf14ec1c268e64B256D705BCB78fb924795Cb81"
+identity_updates_contract_address = "0xfb62Bd1B340479568F9231972B69B3Fc536a2958"
+rates_registry_contract_address = "0x0fc90488076c5CA9a9cF7481085cd05d7F7d3221"
 chain_rpc_url = $XMTP_SEPOLIA_RPC_URL
 signer_private_key = $GENERATED_PRIVATE_KEY
 domain_name = $YOUR_NEW_DOMAIN_NAME
