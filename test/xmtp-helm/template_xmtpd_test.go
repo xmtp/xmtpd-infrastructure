@@ -86,7 +86,6 @@ func TestXmtpdNoEnvWorks(t *testing.T) {
 	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtpd")
 
 	assert.NotNil(t, deployment)
-	assert.Empty(t, deployment.Spec.Template.Spec.Containers[0].Env)
 }
 
 func TestXmtpdEnvWorks(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
@@ -53,6 +54,7 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
 	options.KubectlOptions = kubectlOptions
 	options.KubectlOptions.Namespace = namespaceName
+	options.Logger = logger.Discard
 
 	installStep(t, options, helmChartReleaseName)
 
@@ -114,14 +116,10 @@ func getLastSection(envKey string) string {
 // 3. Default values.
 func GetDefaultSecrets(t *testing.T) map[string]string {
 	defaultSecrets := map[string]string{
-		"env.secret.XMTPD_SIGNER_PRIVATE_KEY":                 "<replace-me>",
-		"env.secret.XMTPD_PAYER_PRIVATE_KEY":                  "<replace-me>",
-		"env.secret.XMTPD_CONTRACTS_RPC_URL":                  "https://rpc-testnet-staging-88dqtxdinc.t.conduit.xyz/",
-		"env.secret.XMTPD_CONTRACTS_CHAIN_ID":                 "34498",
-		"env.secret.XMTPD_CONTRACTS_NODES_ADDRESS":            "0x2259D37BE99E585C836aaaEe91570A16967422C2",
-		"env.secret.XMTPD_CONTRACTS_MESSAGES_ADDRESS":         "0x37CbfF93EC9330D245F177f52cADffa3C55D52e9",
-		"env.secret.XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS": "0xF50FBC42c6B540740875Af580c9e1b53C051b2c0",
-		"env.secret.XMTPD_LOG_LEVEL":                          "debug",
+		"env.secret.XMTPD_SIGNER_PRIVATE_KEY": "<replace-me>",
+		"env.secret.XMTPD_PAYER_PRIVATE_KEY":  "<replace-me>",
+		"env.secret.XMTPD_CONTRACTS_RPC_URL":  "<replace-me>",
+		"env.secret.XMTPD_LOG_LEVEL":          "debug",
 	}
 
 	// Load secrets from a well-known file
@@ -147,7 +145,7 @@ func GetDefaultSecrets(t *testing.T) map[string]string {
 // For Example:
 // env.secret.XMTPD_SIGNER_PRIVATE_KEY: "custom_private_key"
 // env.secret.XMTPD_LOG_LEVEL: "info"
-// env.secret.XMTPD_CONTRACTS_RPC_URL: "https://custom.rpc.url/"
+// env.secret.XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/..."
 func loadSecretsFromYAMLFile(t *testing.T, filePath string) map[string]string {
 	secrets := make(map[string]string)
 
@@ -156,7 +154,9 @@ func loadSecretsFromYAMLFile(t *testing.T, filePath string) map[string]string {
 		t.Logf("Could not open file %s. Using default values. Error: %s", filePath, err.Error())
 		return secrets
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&secrets)
