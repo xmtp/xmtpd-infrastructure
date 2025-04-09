@@ -17,7 +17,11 @@ func TestKubernetesBasicPayerInstall(t *testing.T) {
 		SetValues: map[string]string{},
 	}
 
+	defer testlib.Teardown(testlib.TEARDOWN_DATABASE)
+	_, _, db := testlib.StartDB(t, &options, namespace)
+
 	secrets := testlib.GetDefaultSecrets(t)
+	secrets["env.secret.XMTPD_DB_WRITER_CONNECTION_STRING"] = db.ConnString
 
 	options = helm.Options{
 		SetValues: secrets,
