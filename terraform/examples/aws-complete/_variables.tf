@@ -42,6 +42,11 @@ variable "identity_updates_contract_address" {
   type        = string
 }
 
+variable "rates_registry_contract_address" {
+  description = "The address of the rates registry contract"
+  type        = string
+}
+
 variable "chain_rpc_url" {
   description = "The RPC URL to connect to the XMTP chain"
   sensitive   = true

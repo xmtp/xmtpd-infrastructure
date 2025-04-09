@@ -33,6 +33,7 @@ module "task_definition" {
     "XMTPD_CONTRACTS_NODES_ADDRESS"            = var.service_config.nodes_contract_address
     "XMTPD_CONTRACTS_MESSAGES_ADDRESS"         = var.service_config.messages_contract_address
     "XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS" = var.service_config.identity_updates_contract_address
+    "XMTPD_CONTRACTS_RATES_REGISTRY_ADDRESS"   = var.service_config.rates_registry_contract_address
   }
 
   secrets = {
