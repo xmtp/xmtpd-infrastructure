@@ -12,4 +12,4 @@ spec:
       protocol: TCP
   selector:
     {{- include "xmtpd.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/role: api
+    app.kubernetes.io/role: xmtpd-server-api
