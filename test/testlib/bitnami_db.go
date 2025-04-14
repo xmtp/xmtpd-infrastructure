@@ -56,7 +56,7 @@ func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, name
 
 	installStep(t, options, helmChartReleaseName)
 
-	AddTeardown(TEARDOWN_DATABASE, func() {
+	t.Cleanup(func() {
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
@@ -79,7 +79,7 @@ func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, name
 	pods := FindPodsFromChart(t, namespaceName, dbStatefulSet)
 
 	for _, pod := range pods {
-		AddTeardown(TEARDOWN_DATABASE, func() {
+		t.Cleanup(func() {
 			if t.Failed() {
 				// dump diagnostic info to test logs
 				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", pod.Name)

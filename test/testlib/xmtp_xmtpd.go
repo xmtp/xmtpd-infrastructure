@@ -6,9 +6,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
-	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
-	"os"
 	"strings"
 	"testing"
 )
@@ -58,7 +56,7 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 
 	installStep(t, options, helmChartReleaseName)
 
-	AddTeardown(TEARDOWN_XMTPD, func() {
+	t.Cleanup(func() {
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
@@ -86,7 +84,7 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 
 	allPods := append(podsSync, podsApi...)
 	for _, pod := range allPods {
-		AddTeardown(TEARDOWN_XMTPD, func() {
+		t.Cleanup(func() {
 			if t.Failed() {
 				// dump diagnostic info to test logs
 				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", pod.Name)
@@ -101,69 +99,4 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentApi, replicaCount)
 
 	return
-}
-
-func getLastSection(envKey string) string {
-	// Split the string by dots
-	parts := strings.Split(envKey, ".")
-	// Return the last part
-	return parts[len(parts)-1]
-}
-
-// GetDefaultSecrets loads secrets in the following priority order:
-// 1. Environmental variables.
-// 2. Well-known file on disk (e.g., LOCAL_SECRETS_FILE).
-// 3. Default values.
-func GetDefaultSecrets(t *testing.T) map[string]string {
-	defaultSecrets := map[string]string{
-		"env.secret.XMTPD_SIGNER_PRIVATE_KEY": "<replace-me>",
-		"env.secret.XMTPD_PAYER_PRIVATE_KEY":  "<replace-me>",
-		"env.secret.XMTPD_CONTRACTS_RPC_URL":  "<replace-me>",
-		"env.secret.XMTPD_LOG_LEVEL":          "debug",
-	}
-
-	// Load secrets from a well-known file
-	secretsFromFile := loadSecretsFromYAMLFile(t, LOCAL_SECRETS_FILE)
-
-	// Merge secrets with priority: environment variable > file > default
-	mergedSecrets := make(map[string]string)
-	for key, defaultValue := range defaultSecrets {
-		if value, found := os.LookupEnv(getLastSection(key)); found {
-			mergedSecrets[key] = value
-		} else if value, found := secretsFromFile[key]; found {
-			mergedSecrets[key] = value
-		} else {
-			mergedSecrets[key] = defaultValue
-		}
-	}
-
-	return mergedSecrets
-}
-
-// loadSecretsFromYAMLFile loads secrets from a given YAML file.
-// The YAML file should have a flat key-value structure.
-// For Example:
-// env.secret.XMTPD_SIGNER_PRIVATE_KEY: "custom_private_key"
-// env.secret.XMTPD_LOG_LEVEL: "info"
-// env.secret.XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/..."
-func loadSecretsFromYAMLFile(t *testing.T, filePath string) map[string]string {
-	secrets := make(map[string]string)
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		t.Logf("Could not open file %s. Using default values. Error: %s", filePath, err.Error())
-		return secrets
-	}
-	defer func() {
-		_ = file.Close()
-	}()
-
-	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(&secrets)
-	if err != nil {
-		t.Logf("Could not decode file %s. Using default values. Error: %s", filePath, err.Error())
-		return secrets
-	}
-
-	return secrets
 }
