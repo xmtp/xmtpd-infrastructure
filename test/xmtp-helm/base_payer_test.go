@@ -8,25 +8,20 @@ import (
 )
 
 func TestKubernetesBasicPayerInstall(t *testing.T) {
-	defer testlib.VerifyTeardown(t)
-	defer testlib.Teardown(testlib.TEARDOWN_GLOBAL)
-
 	namespace := testlib.CreateRandomNamespace(t, 2)
 
 	options := helm.Options{
 		SetValues: map[string]string{},
 	}
-
-	defer testlib.Teardown(testlib.TEARDOWN_DATABASE)
 	_, _, db := testlib.StartDB(t, &options, namespace)
+	_, _, anvil := testlib.StartAnvil(t, &options, namespace)
 
 	secrets := testlib.GetDefaultSecrets(t)
 	secrets["env.secret.XMTPD_DB_WRITER_CONNECTION_STRING"] = db.ConnString
+	secrets["env.secret.XMTPD_CONTRACTS_RPC_URL"] = anvil.Endpoint
 
 	options = helm.Options{
 		SetValues: secrets,
 	}
-
-	defer testlib.Teardown(testlib.TEARDOWN_PAYER)
 	testlib.StartPayer(t, &options, 1, namespace)
 }

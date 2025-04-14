@@ -8,29 +8,24 @@ import (
 )
 
 func TestKubernetesBasicXMTPDInstall(t *testing.T) {
-	defer testlib.VerifyTeardown(t)
-	defer testlib.Teardown(testlib.TEARDOWN_GLOBAL)
-
 	namespace := testlib.CreateRandomNamespace(t, 2)
 
 	options := helm.Options{
 		SetValues: map[string]string{},
 	}
 
-	defer testlib.Teardown(testlib.TEARDOWN_DATABASE)
 	_, _, db := testlib.StartDB(t, &options, namespace)
-
-	defer testlib.Teardown(testlib.TEARDOWN_MLS)
 	_, _, mls := testlib.StartMLS(t, &options, 1, namespace)
+	_, _, anvil := testlib.StartAnvil(t, &options, namespace)
 
 	secrets := testlib.GetDefaultSecrets(t)
 	secrets["env.secret.XMTPD_DB_WRITER_CONNECTION_STRING"] = db.ConnString
 	secrets["env.secret.XMTPD_MLS_VALIDATION_GRPC_ADDRESS"] = mls.Endpoint
+	secrets["env.secret.XMTPD_CONTRACTS_RPC_URL"] = anvil.Endpoint
 
 	options = helm.Options{
 		SetValues: secrets,
 	}
 
-	defer testlib.Teardown(testlib.TEARDOWN_XMTPD)
 	testlib.StartXMTPD(t, &options, 1, namespace)
 }
