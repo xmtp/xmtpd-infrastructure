@@ -89,3 +89,13 @@ env:
     XMTPD_CONTRACTS_MESSAGES_ADDRESS: "0xfbf14ec1c268e64B256D705BCB78fb924795Cb81"
     XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS: "0xfb62Bd1B340479568F9231972B69B3Fc536a2958"
     XMTPD_CONTRACTS_RATES_MANAGER_ADDRESS: "0x0fc90488076c5CA9a9cF7481085cd05d7F7d3221"
+
+prune:
+  create: false
+  schedule: "0 * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  image:
+    repository: "ghcr.io/xmtp/xmtpd-prune"
+    pullPolicy: IfNotPresent
+    tag: "latest"

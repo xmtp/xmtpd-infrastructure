@@ -10,9 +10,7 @@ import (
 func TestKubernetesBasicXMTPDInstall(t *testing.T) {
 	namespace := testlib.CreateRandomNamespace(t, 2)
 
-	options := helm.Options{
-		SetValues: map[string]string{},
-	}
+	options := helm.Options{}
 
 	_, _, db := testlib.StartDB(t, &options, namespace)
 	_, _, mls := testlib.StartMLS(t, &options, 1, namespace)
