@@ -92,6 +92,7 @@ env:
 
 prune:
   create: false
+  databaseName: ""
   schedule: "0 * * * *"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1

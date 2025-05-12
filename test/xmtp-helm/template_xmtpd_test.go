@@ -112,6 +112,21 @@ func TestXmtpdPruneCreate(t *testing.T) {
 		assert.EqualValues(t, successfulJobsHistoryLimit, *cronjob.Spec.SuccessfulJobsHistoryLimit)
 		assert.EqualValues(t, failedJobsHistoryLimit, *cronjob.Spec.FailedJobsHistoryLimit)
 	}
+	assertDbNameEquals := func(cronjob *v1.CronJob, dbName string) {
+		containers := cronjob.Spec.JobTemplate.Spec.Template.Spec.Containers
+		assert.Len(t, containers, 1)
+		container := containers[0]
+		env := container.Env
+		assert.GreaterOrEqual(t, len(env), 1)
+		found := false
+		for _, envVar := range env {
+			if envVar.Name == "XMTPD_DB_NAME_OVERRIDE" {
+				found = true
+				assert.Equal(t, dbName, envVar.Value)
+			}
+		}
+		assert.True(t, found, "could not find environment variable XMTPD_DB_NAME_OVERRIDE")
+	}
 
 	tests := []struct {
 		name       string
@@ -120,13 +135,22 @@ func TestXmtpdPruneCreate(t *testing.T) {
 		assertions func(*v1.CronJob)
 	}{
 		{"disable", &helm.Options{}, false, func(cronjob *v1.CronJob) {}},
-		{"enable default", &helm.Options{
+		{"enable default no DB", &helm.Options{
 			SetValues: map[string]string{
 				"prune.create": "true",
 			},
 		}, true, func(cronjob *v1.CronJob) {
 			assertScheduleEquals(cronjob, "0 * * * *")
 			assertHistoriesEquals(cronjob, 3, 1)
+			assertDbNameEquals(cronjob, "")
+		}},
+		{"enable default set DB", &helm.Options{
+			SetValues: map[string]string{
+				"prune.create":       "true",
+				"prune.databaseName": "xmtpd-sha",
+			},
+		}, true, func(cronjob *v1.CronJob) {
+			assertDbNameEquals(cronjob, "xmtpd-sha")
 		}},
 		{"set schedule", &helm.Options{
 			SetValues: map[string]string{

@@ -290,6 +290,21 @@ ingress:
 
 For a comprehensive guide on how to terminate TLS in GKE, see [Deploy xmtpd on Google Kubernetes Engine secured by SSL/TLS](../doc/nginx-cert-gke.md)
 
+## XMTPD Database Pruning
+
+We offer a convenient Kubernetes CronJob that prunes the XMTPD database following the XMTP protocol data retention protocol.
+
+To read more about the infrastructure agnostic database pruning policy, go to [XMTPD Database pruning](../doc/db-pruning.md).
+
+To enable the pruning job, set the following:
+
+```yaml
+# filename xmtpd.yaml
+prune:
+  enable: true
+  databaseName: <xmtpd database>
+```
+
 ## What’s next
 
 > [!TIP]

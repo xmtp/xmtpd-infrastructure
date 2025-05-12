@@ -31,10 +31,10 @@ spec:
               imagePullPolicy: {{ .Values.prune.image.pullPolicy }}
               securityContext:
                 {{- toYaml .Values.securityContext | nindent 16 }}
-              {{- if (include "helpers.list-env-variables" .) }}
               env:
+                - name: XMTPD_DB_NAME_OVERRIDE
+                  value: {{ .Values.prune.databaseName }}
                 {{ include "helpers.list-env-variables" . | indent 16 }}
-              {{- end }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
           {{- with .Values.nodeSelector }}
