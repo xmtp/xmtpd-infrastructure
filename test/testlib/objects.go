@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	"strings"
@@ -93,6 +94,39 @@ func ExtractDeployment(t *testing.T, output string, deploymentName string) *apps
 
 	if deployment == nil {
 		t.Fatalf("Could not extract deployment from template")
+	}
+
+	return deployment
+}
+
+func ExtractCronJobE(t *testing.T, output string, cronjobName string) *v1.CronJob {
+	parts := strings.Split(output, "---")
+	for _, part := range parts {
+		if len(part) == 0 {
+			continue
+		}
+
+		if !strings.Contains(part, "kind: CronJob") {
+			continue
+		}
+
+		if !strings.Contains(part, fmt.Sprintf("name: %s", cronjobName)) {
+			continue
+		}
+
+		var object v1.CronJob
+		helm.UnmarshalK8SYaml(t, part, &object)
+
+		return &object
+	}
+
+	return nil
+}
+func ExtractCronjob(t *testing.T, output string, cronjobName string) *v1.CronJob {
+	deployment := ExtractCronJobE(t, output, cronjobName)
+
+	if deployment == nil {
+		t.Fatalf("Could not extract cronjob from template")
 	}
 
 	return deployment

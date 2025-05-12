@@ -1,0 +1,52 @@
+{{- if .Values.prune.create -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "xmtpd.fullname" . }}-prune
+  labels:
+    {{- include "xmtpd.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.prune.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.prune.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.prune.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          labels:
+            {{- include "xmtpd.labels" . | nindent 12 }}
+            {{- with .Values.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        spec:
+          serviceAccountName: {{ include "xmtpd.serviceAccountName" . }}
+          restartPolicy: OnFailure
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.prune.image.repository }}:{{ .Values.prune.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.prune.image.pullPolicy }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              env:
+                - name: XMTPD_DB_NAME_OVERRIDE
+                  value: {{ .Values.prune.databaseName }}
+                {{ include "helpers.list-env-variables" . | indent 16 }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+{{- end }}

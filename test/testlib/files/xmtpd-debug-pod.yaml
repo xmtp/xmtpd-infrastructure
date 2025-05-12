@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-debug
+  labels:
+    app: net-debug
+spec:
+  containers:
+    - name: xmtpd-utils
+      image: ghcr.io/xmtp/xmtpd-cli:sha-7e2f18f
+      command: ["sh"]
+      args: ["-c", "tail -f /dev/null"]
+      stdin: true
+      tty: true
