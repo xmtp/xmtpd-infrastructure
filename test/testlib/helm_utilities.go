@@ -38,7 +38,9 @@ func GetAppLog(t *testing.T, namespace string, podName string, fileNameSuffix st
 
 	f, err := os.Create(filePath)
 	require.NoError(t, err)
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	writer := io.Writer(f)
 

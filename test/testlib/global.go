@@ -84,7 +84,9 @@ func GetK8sEventLog(t *testing.T, namespace string) {
 
 	f, err := os.Create(filePath)
 	require.NoError(t, err)
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	options := k8s.NewKubectlOptions("", "", namespace)
 
