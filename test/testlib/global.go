@@ -123,3 +123,11 @@ func GetDefaultSecrets(t *testing.T) map[string]string {
 
 	return defaultSecrets
 }
+
+func RunAsync[T any](f func() T) <-chan T {
+	ch := make(chan T, 1)
+	go func() {
+		ch <- f()
+	}()
+	return ch
+}

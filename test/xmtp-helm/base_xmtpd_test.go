@@ -12,9 +12,24 @@ func TestKubernetesBasicXMTPDInstall(t *testing.T) {
 
 	options := helm.Options{}
 
-	_, _, db := testlib.StartDB(t, &options, namespace)
-	_, _, mls := testlib.StartMLS(t, &options, 1, namespace)
-	_, _, anvil := testlib.StartAnvil(t, &options, namespace)
+	dbCh := testlib.RunAsync(func() testlib.DB {
+		_, _, db := testlib.StartDB(t, &options, namespace)
+		return db
+	})
+
+	mlsCh := testlib.RunAsync(func() testlib.MLS {
+		_, _, mls := testlib.StartMLS(t, &options, 1, namespace)
+		return mls
+	})
+
+	anvilCh := testlib.RunAsync(func() testlib.AnvilCfg {
+		_, _, anvil := testlib.StartAnvil(t, &options, namespace)
+		return anvil
+	})
+
+	db := <-dbCh
+	mls := <-mlsCh
+	anvil := <-anvilCh
 
 	secrets := testlib.GetDefaultSecrets(t)
 	secrets["env.secret.XMTPD_DB_WRITER_CONNECTION_STRING"] = db.ConnString

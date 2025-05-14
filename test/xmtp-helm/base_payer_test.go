@@ -13,8 +13,18 @@ func TestKubernetesBasicPayerInstall(t *testing.T) {
 	options := helm.Options{
 		SetValues: map[string]string{},
 	}
-	_, _, db := testlib.StartDB(t, &options, namespace)
-	_, _, anvil := testlib.StartAnvil(t, &options, namespace)
+
+	dbCh := testlib.RunAsync(func() testlib.DB {
+		_, _, db := testlib.StartDB(t, &options, namespace)
+		return db
+	})
+	anvilCh := testlib.RunAsync(func() testlib.AnvilCfg {
+		_, _, anvil := testlib.StartAnvil(t, &options, namespace)
+		return anvil
+	})
+
+	db := <-dbCh
+	anvil := <-anvilCh
 
 	secrets := testlib.GetDefaultSecrets(t)
 	secrets["env.secret.XMTPD_DB_WRITER_CONNECTION_STRING"] = db.ConnString
