@@ -5,6 +5,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/stretchr/testify/require"
 	"io"
+	v1 "k8s.io/api/batch/v1"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -153,6 +154,37 @@ func Await(t *testing.T, lmbd func() bool, timeout time.Duration) {
 	}
 }
 
+// AwaitNrReplicasCreated
+/**
+ * AwaitNrReplicasCreated waits until the specified number of replicas of a pod are created in the given namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ * @param expectedName string - The expected name substring of the pods to check for.
+ * @param nrReplicas int - The number of replicas expected to be created.
+ *
+ * The function waits for a maximum of 1 minute, checking once per second, to find the expected number of replicas that
+ * are created. If the expected number is found within the timeout, the function returns; otherwise, it logs the error.
+ */
+func AwaitNrReplicasCreated(t *testing.T, namespace string, expectedName string, nrReplicas int) {
+	// the cluster might be downloading the docker images, so this might take a while the first time
+	timeout := 1 * time.Minute
+
+	Await(t, func() bool {
+		var pods []corev1.Pod
+		var podNames string
+		for _, pod := range FindAllPodsInSchema(t, namespace) {
+			if strings.Contains(pod.Name, expectedName) {
+				pods = append(pods, pod)
+			}
+		}
+
+		t.Logf("%d pods CREATED for name '%s': expected=%d, pods=[%s]\n", len(pods), expectedName, nrReplicas, podNames)
+
+		return len(pods) == nrReplicas
+	}, timeout)
+}
+
 // AwaitNrReplicasScheduled
 /**
  * AwaitNrReplicasScheduled waits until the specified number of replicas of a pod are scheduled in the given namespace.
@@ -234,6 +266,23 @@ func AwaitNrReplicasReady(t *testing.T, namespace string, expectedName string, n
 	}, timeout)
 }
 
+func AwaitPodTerminated(t *testing.T, namespace string, expectedName string) {
+	timeout := 30 * time.Second
+
+	Await(t, func() bool {
+		for _, pod := range FindAllPodsInSchema(t, namespace) {
+			if strings.Contains(pod.Name, expectedName) {
+				// Check if pod is in terminal phase
+				if pod.Status.Phase == corev1.PodSucceeded || pod.Status.Phase == corev1.PodFailed {
+					t.Logf("Pod %s has terminated with phase: %s", pod.Name, pod.Status.Phase)
+					return true
+				}
+			}
+		}
+		return false
+	}, timeout)
+}
+
 // FindAllPodsInSchema
 /**
  * FindAllPodsInSchema retrieves all pods in the specified namespace and sorts them by creation timestamp.
@@ -284,4 +333,121 @@ func FindPodsFromChart(t *testing.T, namespace string, expectedName string) []co
 		}
 	}
 	return pods
+}
+
+// FindAllCronJobsInSchema
+/**
+ * FindAllCronJobsInSchema retrieves all CronJobs in the specified namespace and sorts them by creation timestamp.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ *
+ * @return []v1.CronJob - A sorted slice of all CronJobs in the specified namespace.
+ */
+func FindAllCronJobsInSchema(t *testing.T, namespace string) []v1.CronJob {
+	options := k8s.NewKubectlOptions("", "", namespace)
+	clientset, err := k8s.GetKubernetesClientFromOptionsE(t, options)
+	require.NoError(t, err)
+
+	cronJobsList, err := clientset.BatchV1().CronJobs(namespace).List(t.Context(), metav1.ListOptions{})
+	require.NoError(t, err)
+
+	cronJobs := cronJobsList.Items
+
+	// Sort newest first (similar to your pod function)
+	sort.SliceStable(cronJobs, func(i, j int) bool {
+		return cronJobs[j].CreationTimestamp.Before(&cronJobs[i].CreationTimestamp)
+	})
+
+	return cronJobs
+}
+
+// FindCronJobsFromChart
+/**
+ * FindCronJobsFromChart retrieves CronJob whose names contain the expected substring in the specified namespace.
+ *
+ * @param t *testing.T - The testing context.
+ * @param namespace string - The namespace of the Kubernetes cluster.
+ * @param expectedName string - The expected name substring of the CronJobs to find.
+ *
+ * @return []v1.CronJob - A slice of CronJobs whose names contain the expected substring.
+ */
+func FindCronJobsFromChart(t *testing.T, namespace string, expectedName string) []v1.CronJob {
+
+	var jobs []v1.CronJob
+
+	for _, job := range FindAllCronJobsInSchema(t, namespace) {
+		if strings.Contains(job.Name, expectedName) {
+			jobs = append(jobs, job)
+		}
+	}
+	return jobs
+}
+
+func CreateJobFromCronJob(t *testing.T, namespace string, cronJob *v1.CronJob, newJobName string) *v1.Job {
+	options := k8s.NewKubectlOptions("", "", namespace)
+	clientset, err := k8s.GetKubernetesClientFromOptionsE(t, options)
+	if err != nil {
+		t.Fatalf("Failed to get Kubernetes client: %v", err)
+	}
+
+	// Create a Job object from the CronJob's JobTemplateSpec
+	job := &v1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      newJobName,
+			Namespace: namespace,
+			Labels:    cronJob.Spec.JobTemplate.Labels,
+		},
+		Spec: *cronJob.Spec.JobTemplate.Spec.DeepCopy(),
+	}
+
+	createdJob, err := clientset.BatchV1().Jobs(namespace).Create(t.Context(), job, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	t.Logf("Successfully created Job %s from CronJob %s", newJobName, cronJob.Name)
+	return createdJob
+}
+
+func GetTerminatedPodLog(t *testing.T, namespace string, pod *corev1.Pod, fileNameSuffix string, podLogOptions *corev1.PodLogOptions) string {
+	// Determine if we need previous logs
+	for _, status := range pod.Status.ContainerStatuses {
+		if status.Name == podLogOptions.Container {
+			if status.State.Terminated != nil {
+				t.Logf("Pod %s container %s terminated, retrieving logs.", pod.Name, podLogOptions.Container)
+				// Get logs of terminated container (without Previous)
+				podLogOptions.Previous = false
+			} else if status.RestartCount > 0 {
+				t.Logf("Pod %s container %s restarted, retrieving previous logs.", pod.Name, podLogOptions.Container)
+				podLogOptions.Previous = true
+			} else {
+				t.Fatalf("Pod %s container %s is not terminated, current state unknown", pod.Name, podLogOptions.Container)
+			}
+			break
+		}
+	}
+
+	dirPath := filepath.Join(RESULT_DIR, namespace)
+	filePath := filepath.Join(dirPath, pod.Name+fileNameSuffix+".log")
+	_ = os.MkdirAll(dirPath, 0700)
+	f, err := os.Create(filePath)
+	require.NoError(t, err)
+	defer func() {
+		_ = f.Close()
+	}()
+
+	options := k8s.NewKubectlOptions("", "", namespace)
+	client, err := k8s.GetKubernetesClientFromOptionsE(t, options)
+	require.NoError(t, err)
+
+	reader, err := client.CoreV1().Pods(namespace).GetLogs(pod.Name, podLogOptions).Stream(context.TODO())
+	require.NoError(t, err)
+	defer func() {
+		_ = reader.Close()
+	}()
+
+	_, err = io.Copy(f, reader)
+	require.NoError(t, err)
+
+	t.Logf("Finished reading log file %s", filePath)
+	return filePath
 }
