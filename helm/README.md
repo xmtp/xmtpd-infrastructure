@@ -106,7 +106,7 @@ docker run ghcr.io/xmtp/xmtpd-cli:latest get-pub-key --private-key 0xa9b48d687f4
 
 ### **Step 2.2: Provide your node public key and address**
 
-Provide your node public key and address to the XMTP Security Council team to register your node.
+Provide your node public key and address to the XMTP Security Council team member working with you to register your node.
 
 Ensure that public key and address values are correct because once registered, they are immutable and cannot be changed.
 
