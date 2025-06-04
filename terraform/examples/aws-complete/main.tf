@@ -64,7 +64,7 @@ module "xmtpd_worker" {
     nodes_contract_address            = var.nodes_contract_address
     messages_contract_address         = var.messages_contract_address
     identity_updates_contract_address = var.identity_updates_contract_address
-    rates_registry_contract_address    = var.rates_registry_contract_address
+    rates_registry_contract_address   = var.rates_registry_contract_address
   }
   service_secrets = {
     signer_private_key = var.signer_private_key
