@@ -20,6 +20,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
       - run: terraform fmt -check -recursive
+  tf-validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/examples/aws-complete
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Initialize Terraform
+        run: terraform init
+      - name: Validate Terraform
+        run: terraform validate
   go-lint-fmt:
     runs-on: ubuntu-latest
     steps:
