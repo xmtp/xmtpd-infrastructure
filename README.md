@@ -22,27 +22,40 @@ MLS validation service:
 - 2vCPU
 - 512MiB memory
 
-## Available tooling
-
-- [Helm charts](./helm/README.md) - Deploy xmtpd nodes on Kubernetes clusters
-- [Terraform](./terraform/README.md) - Provision cloud infrastructure for xmtpd nodes
-
-## Production deployment guide for GKE
-
-See [Deploy xmtpd on Google Kubernetes Engine secured by SSL/TLS](./doc/nginx-cert-gke.md) for a detailed guide to creating a production-ready deployment of xmtpd on GKE using NGINX Ingress Controller and Let's Encrypt certificates.
-
 ## Get started
 
-1. Choose your infrastructure approach:
-   - Use Helm charts if you have an existing Kubernetes cluster or want to deploy on managed Kubernetes services
-   - Use Terraform if you need to provision the underlying cloud infrastructure
-2. Follow the respective README for your chosen tool
-3. For GKE production deployments, refer to the SSL/TLS deployment guide for securing your node
+Choose your infrastructure approach:
+
+- Use [Terraform](#provision-awsecs-infrastructure-with-terraform) if you need to provision the underlying cloud infrastructure.
+
+- Use [Helm charts](#deploy-xmtpd-to-your-infrastructure-using-helm-charts) if you have an existing Kubernetes cluster or want to deploy on managed Kubernetes services.
+
+## Deploy xmtpd to AWS/ECS infrastructure with Terraform
+
+You can use this [Terraform tooling](/terraform/) if you need to provision underlying cloud infrastructure on AWS/ECS.
+   
+[XMTPD Terraform Modules](/terraform/README.md) describes how to use Terraform modules to provision AWS/ECS infrastructure for xmtpd nodes.
+
+## Deploy xmtpd to your infrastructure using Helm charts
+
+You can use these [Helm charts](/helm/) to deploy xmtpd into an existing Kubernetes cluster or on managed Kubernetes services.
+
+[Install xmtpd on Kubernetes using Helm charts](/helm/README.md) describes how to install xmtpd on Kubernetes using Helm charts.
+
+Optionally, if you are using Google Kubernetes Engine, you can run xmtpd on GKE with Nginx ingress and Let's Encrypt.
+
+[Deploy xmtpd on Google Kubernetes Engine secured by SSL/TLS](/doc/nginx-cert-gke.md) describes how to secure your deployment with HTTPS and ingress.
+
+## Monitor xmtpd with Prometheus
+   
+Optionally, you can use Kubernetes and Prometheus to set up observability. 
+
+[Set up Prometheus service discovery for xmtpd in Kubernetes using Helm](/doc/k8s-prometheus-monitoring.md) describes how to automatically scrape metrics from xmtpd pods, visualize in the metrics in Grafana, and set alerts.
 
 ## Learn more
 
-- [Decentralizing XMTP](https://xmtp.org/decentralizing-xmtp)
 - [XMTP documentation](https://docs.xmtp.org)
+- [Decentralizing XMTP](https://xmtp.org/decentralizing-xmtp)
 
 ## Contribute
 
