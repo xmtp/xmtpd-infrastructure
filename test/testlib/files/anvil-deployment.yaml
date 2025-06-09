@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: anvil
-          image: ghcr.io/xmtp/contracts:sha-85dc71a
+          image: ghcr.io/xmtp/contracts:0.4.3
           ports:
             - name: anvil-port
               containerPort: 8545
@@ -41,14 +41,39 @@ kind: ConfigMap
 metadata:
   name: xmtp-env
 data:
-  # if you change these do not forget to change global.go:GetDefaultSecrets
-  XMTPD_CONTRACTS_RPC_URL: "http://anvil-service:8545"
+  XMTPD_SETTLEMENT_CHAIN_WSS_URL: "http://anvil-service:8545"
   REGISTER_NODE_OWNER_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
   REGISTER_NODE_ADMIN_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
   REGISTER_NODE_PUBKEY: "0x02ba5734d8f7091719471e7f7ed6b9df170dc70cc661ca05e688601ad984f068b0"
-  XMTPD_CONTRACTS_NODES_ADDRESS: "0x8d69E9834f1e4b38443C638956F7D81CD04eBB2F"
   REGISTER_NODE_HTTP_ADDRESS: "http://xmtpd"
-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: anvil-config
+data:
+  anvil.json: |
+    {
+      "appChainDeploymentBlock": 0,
+      "appChainFactory": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "appChainGateway": "0x0000000000000000000000000000000000000000",
+      "appChainId": 31337,
+      "appChainNativeToken": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "appChainParameterRegistry": "0x059585f0a21A4367ae277f748b89b6954C160b3b",
+      "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+      "distributionManager": "0x59719AA2495ACE5Ce3521De43e7FDbCc4Fa462A1",
+      "groupMessageBroadcaster": "0xA01b1Fe3176503b9A43fcFB6d2e4daC5ac6B8713",
+      "identityUpdateBroadcaster": "0x59373F94bE4568f6a096137F7BB600d40DEAd1b5",
+      "nodeRegistry": "0x429E9FA2C94B5fcc25B656dCB65dEcb857ABAc92",
+      "payerRegistry": "0x6F9F3F83DE0C67F20DE55473D032E075F130c193",
+      "payerReportManager": "0x48b9cCf0364981C3032E5193C3b960c33f787fc3",
+      "rateRegistry": "0x4eD8cb1d630dF20D6ea8443de33b3d0f09222936",
+      "settlementChainDeploymentBlock": 0,
+      "settlementChainFactory": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "settlementChainGateway": "0x0000000000000000000000000000000000000000",
+      "settlementChainId": 31337,
+      "settlementChainParameterRegistry": "0x059585f0a21A4367ae277f748b89b6954C160b3b"
+    }
 ---
 apiVersion: batch/v1
 kind: Job
@@ -58,9 +83,20 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
+      volumes:
+        - name: anvil-config-volume
+          configMap:
+            name: anvil-config
       containers:
         - name: register
           image: ghcr.io/xmtp/xmtpd-cli:latest
+          env:
+            - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
+              value: /etc/xmtp/anvil.json
+          volumeMounts:
+            - name: anvil-config-volume
+              mountPath: /etc/xmtp
+              readOnly: true
           envFrom:
             - configMapRef:
                 name: xmtp-env
@@ -74,6 +110,13 @@ spec:
                 --node-signing-key-pub="$REGISTER_NODE_PUBKEY"
         - name: enable
           image: ghcr.io/xmtp/xmtpd-cli:latest
+          env:
+            - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
+              value: /etc/xmtp/anvil.json
+          volumeMounts:
+            - name: anvil-config-volume
+              mountPath: /etc/xmtp
+              readOnly: true
           envFrom:
             - configMapRef:
                 name: xmtp-env

@@ -10,3 +10,5 @@ const K8S_EVENT_LOG_FILE = "kubernetes_event.log"
 
 const ANVIL_DEPLOYMENT_FILE = "../testlib/files/anvil-deployment.yaml"
 const ANVIL_DEPLOYMENT_NAME = "anvil-node"
+
+const ANVIL_CONFIG_FILE = "../testlib/files/anvil.json"

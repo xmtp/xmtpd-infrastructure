@@ -55,7 +55,7 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 	})
 
 	anvil := AnvilCfg{
-		Endpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
+		Endpoint: fmt.Sprintf("wss://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
 	}
 
 	if !awaitRunning {
