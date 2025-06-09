@@ -49,11 +49,7 @@ variable "service_config" {
   description = "Environment variables to pass to the service that are not sensitive"
   type = object({
     validation_service_grpc_address   = string
-    chain_id                          = string
-    nodes_contract_address            = string
-    messages_contract_address         = string
-    identity_updates_contract_address = string
-    rates_registry_contract_address   = string
+    contracts_config                = string
   })
 }
 
@@ -63,7 +59,8 @@ variable "service_secrets" {
   type = object({
     database_url       = string
     signer_private_key = string
-    chain_rpc_url      = string
+    app_chain_wss_url        = string
+    settlement_chain_wss_url = string
   })
 }
 

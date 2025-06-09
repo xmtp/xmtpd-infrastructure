@@ -1,3 +1,6 @@
+locals {
+  cleaned_contracts_json = jsonencode(jsondecode(var.contracts))
+}
 
 module "mls_validation_service" {
   # tflint-ignore: terraform_module_pinned_source
@@ -32,15 +35,12 @@ module "xmtpd_api" {
 
   service_config = {
     validation_service_grpc_address   = module.mls_validation_service.grpc_service_address
-    chain_id                          = var.chain_id
-    nodes_contract_address            = var.nodes_contract_address
-    messages_contract_address         = var.messages_contract_address
-    identity_updates_contract_address = var.identity_updates_contract_address
-    rates_registry_contract_address   = var.rates_registry_contract_address
+    contracts_config = local.cleaned_contracts_json
   }
   service_secrets = {
     signer_private_key = var.signer_private_key
-    chain_rpc_url      = var.chain_rpc_url
+    app_chain_wss_url = var.app_chain_wss_url
+    settlement_chain_wss_url = var.settlement_chain_wss_url
     database_url       = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
@@ -60,15 +60,12 @@ module "xmtpd_worker" {
   cluster_id     = aws_ecs_cluster.this.id
   service_config = {
     validation_service_grpc_address   = module.mls_validation_service.grpc_service_address
-    chain_id                          = var.chain_id
-    nodes_contract_address            = var.nodes_contract_address
-    messages_contract_address         = var.messages_contract_address
-    identity_updates_contract_address = var.identity_updates_contract_address
-    rates_registry_contract_address   = var.rates_registry_contract_address
+    contracts_config = local.cleaned_contracts_json
   }
   service_secrets = {
     signer_private_key = var.signer_private_key
-    chain_rpc_url      = var.chain_rpc_url
+    app_chain_wss_url = var.app_chain_wss_url
+    settlement_chain_wss_url = var.settlement_chain_wss_url
     database_url       = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false

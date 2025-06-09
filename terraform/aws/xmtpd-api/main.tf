@@ -33,18 +33,14 @@ module "api_task_definition" {
   env_vars = {
     "GOLOG_LOG_FMT"                            = "json"
     "XMTPD_MLS_VALIDATION_GRPC_ADDRESS"        = var.service_config.validation_service_grpc_address
-    "XMTPD_CONTRACTS_CHAIN_ID"                 = var.service_config.chain_id
-    "XMTPD_CONTRACTS_NODES_ADDRESS"            = var.service_config.nodes_contract_address
-    "XMTPD_CONTRACTS_MESSAGES_ADDRESS"         = var.service_config.messages_contract_address
-    "XMTPD_CONTRACTS_IDENTITY_UPDATES_ADDRESS" = var.service_config.identity_updates_contract_address
-    "XMTPD_CONTRACTS_RATES_REGISTRY_ADDRESS"   = var.service_config.rates_registry_contract_address
+    "XMTPD_CONTRACTS_CONFIG_JSON"       = var.service_config.contracts_config
   }
 
   secrets = {
     "XMTPD_DB_WRITER_CONNECTION_STRING" = var.service_secrets.database_url
     "XMTPD_SIGNER_PRIVATE_KEY"          = var.service_secrets.signer_private_key
-    "XMTPD_PAYER_PRIVATE_KEY"           = var.service_secrets.signer_private_key
-    "XMTPD_CONTRACTS_RPC_URL"           = var.service_secrets.chain_rpc_url
+    "XMTPD_APP_CHAIN_WSS_URL"           = var.service_secrets.app_chain_wss_url
+    "XMTPD_SETTLEMENT_CHAIN_WSS_URL"    = var.service_secrets.settlement_chain_wss_url
   }
 
   ports = [local.service_port]

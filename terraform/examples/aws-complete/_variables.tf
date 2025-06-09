@@ -1,6 +1,6 @@
 variable "mls_validation_service_docker_image" {
   description = "Docker image for mls validation service"
-  default     = "ghcr.io/xmtp/mls-validation-service:main"
+  default     = "ghcr.io/xmtp/mls-validation-service:latest"
 }
 
 variable "verifier_chain_rpc_urls" {
@@ -19,37 +19,23 @@ variable "verifier_chain_rpc_urls" {
 
 variable "xmtpd_docker_image" {
   description = "Docker image for xmtpd"
-  default     = "ghcr.io/xmtp/xmtpd:main"
+  default     = "ghcr.io/xmtp/xmtpd:latest"
 }
 
-variable "chain_id" {
-  description = "The chain ID of the XMTP chain"
-  default     = "241320161"
-}
-
-variable "nodes_contract_address" {
-  description = "The address of the nodes contract"
+variable "app_chain_wss_url" {
+  description = "WSS URL for the app blockchain"
   type        = string
-}
-
-variable "messages_contract_address" {
-  description = "The address of the messages contract"
-  type        = string
-}
-
-variable "identity_updates_contract_address" {
-  description = "The address of the identity updates contract"
-  type        = string
-}
-
-variable "rates_registry_contract_address" {
-  description = "The address of the rates registry contract"
-  type        = string
-}
-
-variable "chain_rpc_url" {
-  description = "The RPC URL to connect to the XMTP chain"
   sensitive   = true
+}
+
+variable "settlement_chain_wss_url" {
+  description = "WSS URL for the settlement blockchain"
+  type        = string
+  sensitive   = true
+}
+
+variable "contracts" {
+  description = "JSON Contracts already deployed on the testnet"
   type        = string
 }
 
