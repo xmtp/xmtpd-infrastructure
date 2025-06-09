@@ -28,7 +28,7 @@ spec:
           volumes:
             - name: contracts-config-volume
               configMap:
-                name: {{ .Values.contractsConfig.configMapName }}
+                name: {{ .Values.contractsConfig.configMapName | default (printf "%s-contracts-config" (include "xmtpd.fullname" .)) }}
           containers:
             - name: {{ .Chart.Name }}
               image: "{{ .Values.prune.image.repository }}:{{ .Values.prune.image.tag | default .Chart.AppVersion }}"

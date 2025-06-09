@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"testing"
 )
@@ -87,6 +88,13 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 	}
 
 	AwaitNrReplicasReady(t, namespaceName, ANVIL_DEPLOYMENT_NAME, 1)
+
+	jobPods := FindPodsFromChart(t, namespace, ANVIL_REGISTRATION_NAME)
+	require.Len(t, jobPods, 1)
+
+	jobPod := jobPods[0]
+
+	AwaitPodTerminated(t, namespace, jobPod.Name)
 
 	return namespaceName, ANVIL_DEPLOYMENT_NAME, anvil
 }

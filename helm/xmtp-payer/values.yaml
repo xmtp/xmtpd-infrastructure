@@ -70,8 +70,7 @@ affinity: {}
 secret:
   name: xmtp-payer-env-secret
 
-contractsConfig:
-  configMapName: "contracts-config"
+contractsConfig: {}
 
 env:
   secret: {}

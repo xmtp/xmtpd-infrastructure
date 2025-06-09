@@ -83,8 +83,7 @@ secret:
   name: xmtpd-env-secret
 
 
-contractsConfig:
-  configMapName: "contracts-config"
+contractsConfig: {}
 
 env:
   secret: {}

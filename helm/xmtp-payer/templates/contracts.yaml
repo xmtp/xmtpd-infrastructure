@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: contracts-config
+  name: {{ include "xmtp-payer.fullname" . }}-contracts-config
 data:
   contracts.json: |
     {
