@@ -31,8 +31,6 @@ func TestKubernetesBasicPayerInstall(t *testing.T) {
 	secrets["env.secret.XMTPD_SETTLEMENT_CHAIN_WSS_URL"] = anvil.Endpoint
 	secrets["env.secret.XMTPD_APP_CHAIN_WSS_URL"] = anvil.Endpoint
 
-	secrets["contractsConfig.configMapName"] = "anvil-config"
-
 	options = helm.Options{
 		SetValues: secrets,
 	}
