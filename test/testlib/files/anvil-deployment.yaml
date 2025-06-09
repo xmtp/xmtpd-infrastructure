@@ -52,7 +52,7 @@ kind: ConfigMap
 metadata:
   name: anvil-config
 data:
-  anvil.json: |
+  contracts.json: |
     {
       "appChainDeploymentBlock": 0,
       "appChainFactory": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
@@ -92,7 +92,7 @@ spec:
           image: ghcr.io/xmtp/xmtpd-cli:latest
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
-              value: /etc/xmtp/anvil.json
+              value: /etc/xmtp/contracts.json
           volumeMounts:
             - name: anvil-config-volume
               mountPath: /etc/xmtp
@@ -112,7 +112,7 @@ spec:
           image: ghcr.io/xmtp/xmtpd-cli:latest
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
-              value: /etc/xmtp/anvil.json
+              value: /etc/xmtp/contracts.json
           volumeMounts:
             - name: anvil-config-volume
               mountPath: /etc/xmtp

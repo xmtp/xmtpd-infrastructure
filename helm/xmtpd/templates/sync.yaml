@@ -32,7 +32,7 @@ spec:
       volumes:
         - name: contracts-config-volume
           configMap:
-            name: contracts-config
+            name: {{ .Values.contractsConfig.configMapName }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

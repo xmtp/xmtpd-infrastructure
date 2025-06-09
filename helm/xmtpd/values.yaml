@@ -82,6 +82,10 @@ affinity: {}
 secret:
   name: xmtpd-env-secret
 
+
+contractsConfig:
+  configMapName: "contracts-config"
+
 env:
   secret: {}
 
