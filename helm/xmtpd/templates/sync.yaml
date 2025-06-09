@@ -29,6 +29,10 @@ spec:
       serviceAccountName: {{ include "xmtpd.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: contracts-config-volume
+          configMap:
+            name: {{ .Values.contractsConfig.configMapName | default (printf "%s-contracts-config" (include "xmtpd.fullname" .)) }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -38,6 +42,8 @@ spec:
           args: ["--indexer.enable", "--sync.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0" ]
           {{- if (include "helpers.list-env-variables" .) }}
           env:
+            - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
+              value: /etc/xmtp/contracts.json
             {{ include "helpers.list-env-variables" . | indent 12 }}
           {{- end }}
           ports:
@@ -59,6 +65,10 @@ spec:
             periodSeconds: 10
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: contracts-config-volume
+              mountPath: /etc/xmtp
+              readOnly: true
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

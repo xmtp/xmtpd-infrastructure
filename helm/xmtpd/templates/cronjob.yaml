@@ -25,6 +25,10 @@ spec:
         spec:
           serviceAccountName: {{ include "xmtpd.serviceAccountName" . }}
           restartPolicy: OnFailure
+          volumes:
+            - name: contracts-config-volume
+              configMap:
+                name: {{ .Values.contractsConfig.configMapName | default (printf "%s-contracts-config" (include "xmtpd.fullname" .)) }}
           containers:
             - name: {{ .Chart.Name }}
               image: "{{ .Values.prune.image.repository }}:{{ .Values.prune.image.tag | default .Chart.AppVersion }}"
@@ -32,11 +36,17 @@ spec:
               securityContext:
                 {{- toYaml .Values.securityContext | nindent 16 }}
               env:
+                - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
+                  value: /etc/xmtp/contracts.json
                 - name: XMTPD_DB_NAME_OVERRIDE
                   value: {{ .Values.prune.databaseName }}
                 {{ include "helpers.list-env-variables" . | indent 16 }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
+              volumeMounts:
+                - name: contracts-config-volume
+                  mountPath: /etc/xmtp
+                  readOnly: true
           {{- with .Values.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 8 }}
