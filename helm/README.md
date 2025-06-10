@@ -53,9 +53,11 @@ To run xmtpd, you need an Alchemy account.
 
 2. Go to the [XMTP Chain page](https://dashboard.alchemy.com/chains/xmtp) and set the **Network Status** to ***Enabled***.
 
-3. In the **API URL** column, click **Copy** to copy the XMTP app HTTPs endpoint along with its API key. It should use the format `https://xmtp-testnet.g.alchemy.com/v2/<apikey>`.
+3. In the **API URL** column, click **Copy** to copy the XMTP app WebSockets endpoint along with its API key. It should use the format `wss://xmtp-testnet.g.alchemy.com/v2/<apikey>`.
 
-4. You will use this endpoint for the `XMTPD_CONTRACTS_RPC_URL` config option
+4. You will use this endpoint for the `XMTPD_APP_CHAIN_WSS_URL` config option.
+
+5. Repeat the steps for [Base Sepolia](https://dashboard.alchemy.com/chains/base?network=BASE_SEPOLIA) and set `XMTPD_SETTLEMENT_CHAIN_WSS_URL` to `wss://base-sepolia.g.alchemy.com/v2/<apikey>`.
 
 ## Step 2: Register your node
 
@@ -116,8 +118,8 @@ Ensure that public key and address values are correct because once registered, t
 ```bash
 helm search repo xmtp
 NAME                            CHART VERSION   APP VERSION     DESCRIPTION                                 
-xmtp/xmtp-payer                 0.3.0           v0.3.0          A Helm chart for XMTP Payer                 
-xmtp/xmtpd                      0.3.0           v0.3.0          A Helm chart for XMTPD                      
+xmtp/xmtp-payer                 0.4.0           v0.3.0          A Helm chart for XMTP Payer                 
+xmtp/xmtpd                      0.4.0           v0.3.0          A Helm chart for XMTPD                      
 xmtp/mls-validation-service     0.1.0           v0.1.0          A Helm chart for XMTP MLS Validation Service
 ```
 
@@ -161,7 +163,8 @@ env:
   secret:
     XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://<username>:<password>@<host-service>:<port>/<database>?sslmode=disable"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
-    XMTPD_CONTRACTS_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
+    XMTPD_APP_CHAIN_WSS_URL: "wss://xmtp-testnet.g.alchemy.com/v2/<apikey>"
+    XMTPD_SETTLEMENT_CHAIN_WSS_URL: "wss://base-sepolia.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
     XMTPD_METRICS_ENABLE: "true"
     XMTPD_REFLECTION_ENABLE: "true"
@@ -301,8 +304,7 @@ To enable the pruning job, set the following:
 ```yaml
 # filename xmtpd.yaml
 prune:
-  enable: true
-  databaseName: <xmtpd database>
+  create: true
 ```
 
 ## What’s next

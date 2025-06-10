@@ -52,6 +52,10 @@ Optionally, you can use Kubernetes and Prometheus to set up observability.
 
 [Set up Prometheus service discovery for xmtpd in Kubernetes using Helm](/doc/k8s-prometheus-monitoring.md) describes how to automatically scrape metrics from xmtpd pods, visualize in the metrics in Grafana, and set alerts.
 
+## Prune expired messages
+
+To prevent data bloat and keep your node performant, be sure to [prune expired messages from your xmtpd database](/doc/db-pruning.md).
+
 ## Learn more
 
 - [XMTP documentation](https://docs.xmtp.org)
