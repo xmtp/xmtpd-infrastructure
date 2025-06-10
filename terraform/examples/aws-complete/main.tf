@@ -34,14 +34,14 @@ module "xmtpd_api" {
   certificate_arn = aws_acm_certificate.public.arn
 
   service_config = {
-    validation_service_grpc_address   = module.mls_validation_service.grpc_service_address
-    contracts_config = local.cleaned_contracts_json
+    validation_service_grpc_address = module.mls_validation_service.grpc_service_address
+    contracts_config                = local.cleaned_contracts_json
   }
   service_secrets = {
-    signer_private_key = var.signer_private_key
-    app_chain_wss_url = var.app_chain_wss_url
+    signer_private_key       = var.signer_private_key
+    app_chain_wss_url        = var.app_chain_wss_url
     settlement_chain_wss_url = var.settlement_chain_wss_url
-    database_url       = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
+    database_url             = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
 
@@ -59,14 +59,14 @@ module "xmtpd_worker" {
   docker_image   = var.xmtpd_docker_image
   cluster_id     = aws_ecs_cluster.this.id
   service_config = {
-    validation_service_grpc_address   = module.mls_validation_service.grpc_service_address
-    contracts_config = local.cleaned_contracts_json
+    validation_service_grpc_address = module.mls_validation_service.grpc_service_address
+    contracts_config                = local.cleaned_contracts_json
   }
   service_secrets = {
-    signer_private_key = var.signer_private_key
-    app_chain_wss_url = var.app_chain_wss_url
+    signer_private_key       = var.signer_private_key
+    app_chain_wss_url        = var.app_chain_wss_url
     settlement_chain_wss_url = var.settlement_chain_wss_url
-    database_url       = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
+    database_url             = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
 

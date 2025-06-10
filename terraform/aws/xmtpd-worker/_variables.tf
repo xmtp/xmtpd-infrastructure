@@ -28,7 +28,7 @@ variable "vpc_id" {
 variable "service_config" {
   description = "Environment variables to pass to the service that are not sensitive"
   type = object({
-    validation_service_grpc_address   = string
+    validation_service_grpc_address = string
     contracts_config                = string
   })
 }
@@ -37,8 +37,8 @@ variable "service_secrets" {
   description = "Environment variables to pass to the service"
   sensitive   = true
   type = object({
-    database_url       = string
-    signer_private_key = string
+    database_url             = string
+    signer_private_key       = string
     app_chain_wss_url        = string
     settlement_chain_wss_url = string
   })
