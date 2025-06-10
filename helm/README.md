@@ -53,9 +53,9 @@ To run xmtpd, you need an Alchemy account.
 
 2. Go to the [XMTP Chain page](https://dashboard.alchemy.com/chains/xmtp) and set the **Network Status** to ***Enabled***.
 
-3. In the **API URL** column, click **Copy** to copy the XMTP app Websockets endpoint along with its API key. It should use the format `wss://xmtp-testnet.g.alchemy.com/v2/<apikey>`.
+3. In the **API URL** column, click **Copy** to copy the XMTP app WebSockets endpoint along with its API key. It should use the format `wss://xmtp-testnet.g.alchemy.com/v2/<apikey>`.
 
-4. You will use this endpoint for the `XMTPD_APP_CHAIN_WSS_URL` config option
+4. You will use this endpoint for the `XMTPD_APP_CHAIN_WSS_URL` config option.
 
 5. Repeat the steps for [Base Sepolia](https://dashboard.alchemy.com/chains/base?network=BASE_SEPOLIA) and set `XMTPD_SETTLEMENT_CHAIN_WSS_URL` to `wss://base-sepolia.g.alchemy.com/v2/<apikey>`.
 
