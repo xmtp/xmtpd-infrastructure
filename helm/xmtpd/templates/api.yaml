@@ -40,10 +40,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args: ["--replication.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0"]
-          {{- if (include "helpers.list-env-variables" .) }}
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
               value: /etc/xmtp/contracts.json
+          {{- if (include "helpers.list-env-variables" .) }}
             {{ include "helpers.list-env-variables" . | indent 12 }}
           {{- end }}
           ports:
