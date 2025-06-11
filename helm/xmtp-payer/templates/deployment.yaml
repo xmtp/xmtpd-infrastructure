@@ -38,16 +38,19 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["--payer.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0"]
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
               value: /etc/xmtp/contracts.json
-            - name: XMTPD_PAYER_ENABLE
-              value: "true"
-            {{- include "helpers.list-env-variables" . | indent 12 }}
+          {{- if (include "helpers.list-env-variables" .) }}
+            {{ include "helpers.list-env-variables" . | indent 12 }}
+          {{- end }}
           ports:
             - name: grpc
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+            - name: metrics
+              containerPort: 8008
           startupProbe:
             grpc:
               port: {{ .Values.service.targetPort }}
