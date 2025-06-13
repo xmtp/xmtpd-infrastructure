@@ -74,3 +74,27 @@ module "xmtpd_worker" {
     aws = aws
   }
 }
+
+module "xmtpd_prune" {
+  # tflint-ignore: terraform_module_pinned_source
+  source = "github.com/xmtp/xmtpd-infrastructure//terraform/aws/xmtpd-prune"
+
+  vpc_id         = module.vpc.vpc_id
+  public_subnets = module.vpc.public_subnets
+  docker_image   = var.xmtpd_prune_docker_image
+  cluster_id     = aws_ecs_cluster.this.id
+  service_config = {
+    contracts_config                = local.cleaned_contracts_json
+  }
+  service_secrets = {
+    signer_private_key       = var.signer_private_key
+    app_chain_wss_url        = var.app_chain_wss_url
+    settlement_chain_wss_url = var.settlement_chain_wss_url
+    database_url             = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
+  }
+  enable_debug_logs = false
+
+  providers = {
+    aws = aws
+  }
+}

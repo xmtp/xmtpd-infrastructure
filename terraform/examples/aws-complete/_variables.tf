@@ -22,6 +22,11 @@ variable "xmtpd_docker_image" {
   default     = "ghcr.io/xmtp/xmtpd:latest"
 }
 
+variable "xmtpd_prune_docker_image" {
+  description = "Docker image for xmtpd prune"
+  default     = "ghcr.io/xmtp/xmtpd-prune:latest"
+}
+
 variable "app_chain_wss_url" {
   description = "WSS URL for the app blockchain"
   type        = string
