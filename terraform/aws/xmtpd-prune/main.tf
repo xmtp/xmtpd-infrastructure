@@ -4,7 +4,6 @@ locals {
   xmtp_env_vars = {
     "GOLOG_LOG_FMT"               = "json"
     "XMTPD_LOG_ENCODING"          = "json"
-    "ENV"                         = var.env
     "XMTPD_CONTRACTS_CONFIG_JSON" = var.service_config.contracts_config
   }
 
@@ -26,7 +25,7 @@ module "task_definition_prune" {
   env_vars = local.xmtp_env_vars
   secrets  = local.xmtp_secrets
 
-  image           = var.docker_image
+  image = var.docker_image
 
   command = local.prune_command
 
