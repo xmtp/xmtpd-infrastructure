@@ -3,7 +3,7 @@ entries:
   mls-validation-service:
   - apiVersion: v2
     appVersion: v0.1.0
-    created: "2025-04-10T13:58:57.083561-04:00"
+    created: "2025-06-13T14:00:27.073075-07:00"
     description: A Helm chart for XMTP MLS Validation Service
     digest: 99e2ed2f0b597e097ecbd805a00c69d0dee1885bc82210e4671ae12a579224d1
     maintainers:
@@ -15,8 +15,20 @@ entries:
     version: 0.1.0
   xmtp-payer:
   - apiVersion: v2
+    appVersion: v0.4.0
+    created: "2025-06-13T14:00:27.074042-07:00"
+    description: A Helm chart for XMTP Payer
+    digest: 3d85ad411c4a9f8f58b9c624fc8624d990b25b2c594a42d8bf7cadc5c5a6b774
+    maintainers:
+    - name: XMTPD
+    name: xmtp-payer
+    type: application
+    urls:
+    - https://xmtp.github.io/xmtpd-infrastructure/xmtp-payer-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
     appVersion: v0.3.0
-    created: "2025-04-10T13:58:57.085441-04:00"
+    created: "2025-06-13T14:00:27.07385-07:00"
     description: A Helm chart for XMTP Payer
     digest: 5829f4ec7322c9097db872d01adbbeb678727aa2fe8c846476e79833c3023f69
     maintainers:
@@ -28,7 +40,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: v0.2.0
-    created: "2025-04-10T13:58:57.084956-04:00"
+    created: "2025-06-13T14:00:27.07347-07:00"
     description: A Helm chart for XMTP Payer
     digest: 4da0ef971105fb77cf708d34d8c07354cc8ded97f03837d6c394182a01a3880a
     maintainers:
@@ -40,8 +52,20 @@ entries:
     version: 0.2.0
   xmtpd:
   - apiVersion: v2
+    appVersion: v0.4.0
+    created: "2025-06-13T14:00:27.074946-07:00"
+    description: A Helm chart for XMTPD
+    digest: 455affb22f78a34df7d9a00563d41add25c4a6bee66301785b46ee47d1491ac6
+    maintainers:
+    - name: XMTPD
+    name: xmtpd
+    type: application
+    urls:
+    - https://xmtp.github.io/xmtpd-infrastructure/xmtpd-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
     appVersion: v0.3.0
-    created: "2025-04-10T13:58:57.086127-04:00"
+    created: "2025-06-13T14:00:27.074743-07:00"
     description: A Helm chart for XMTPD
     digest: cb48c17eb30af34c4c5bb775464c06df8b6992c0d10ae9510a7280aa3e44220e
     maintainers:
@@ -53,7 +77,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: v0.2.0
-    created: "2025-04-10T13:58:57.085862-04:00"
+    created: "2025-06-13T14:00:27.0744-07:00"
     description: A Helm chart for XMTPD
     digest: 6569e23bbacb894bcf46bf3dc6d8f0b071403b9097525fa5faf20c406f174563
     maintainers:
@@ -63,4 +87,4 @@ entries:
     urls:
     - https://xmtp.github.io/xmtpd-infrastructure/xmtpd-0.2.0.tgz
     version: 0.2.0
-generated: "2025-04-10T13:58:57.082943-04:00"
+generated: "2025-06-13T14:00:27.071922-07:00"
