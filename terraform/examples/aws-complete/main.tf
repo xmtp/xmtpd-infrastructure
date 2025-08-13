@@ -41,6 +41,8 @@ module "xmtpd_api" {
     signer_private_key       = var.signer_private_key
     app_chain_wss_url        = var.app_chain_wss_url
     settlement_chain_wss_url = var.settlement_chain_wss_url
+    app_chain_rpc_url        = var.app_chain_rpc_url
+    settlement_chain_rpc_url = var.settlement_chain_rpc_url
     database_url             = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
@@ -66,6 +68,8 @@ module "xmtpd_worker" {
     signer_private_key       = var.signer_private_key
     app_chain_wss_url        = var.app_chain_wss_url
     settlement_chain_wss_url = var.settlement_chain_wss_url
+    app_chain_rpc_url        = var.app_chain_rpc_url
+    settlement_chain_rpc_url = var.settlement_chain_rpc_url
     database_url             = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
@@ -90,6 +94,8 @@ module "xmtpd_prune" {
     signer_private_key       = var.signer_private_key
     app_chain_wss_url        = var.app_chain_wss_url
     settlement_chain_wss_url = var.settlement_chain_wss_url
+    app_chain_rpc_url        = var.app_chain_rpc_url
+    settlement_chain_rpc_url = var.settlement_chain_rpc_url
     database_url             = "postgres://${aws_rds_cluster.cluster.master_username}:${aws_rds_cluster.cluster.master_password}@${aws_rds_cluster.cluster.endpoint}:5432/${aws_rds_cluster.cluster.database_name}?sslmode=disable"
   }
   enable_debug_logs = false
