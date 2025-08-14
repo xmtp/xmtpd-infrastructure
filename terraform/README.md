@@ -21,7 +21,7 @@ Currently only AWS is supported with plans for future support for Google Cloud a
    - Polygon Mainnet
    - ZKSync Mainnet
    - Linea Mainnet
-   - XMTP Sepolia
+   - XMTP Ropsten
 5. A private key for your node, which can be generated using the instructions in the `xmtpd` repo [here](https://github.com/xmtp/xmtpd/blob/main/doc/onboarding.md)
 
 ## Register a domain
@@ -49,8 +49,10 @@ verifier_chain_rpc_urls = {
     chain_rpc_59144 = $LINEA_MAINNET_RPC_URL
 }
 contracts = $CONTRACTS_JSON_CONFIG
-app_chain_wss_url = $XMTP_SEPOLIA_RPC_URL
-settlement_chain_wss_url = $BASE_SEPOLIA_RPC_URL
+app_chain_wss_url = $XMTP_SEPOLIA_WSS_URL
+settlement_chain_wss_url = $BASE_SEPOLIA_WSS_URL
+app_chain_rpc_url = $XMTP_SEPOLIA_RPC_URL
+settlement_chain_rpc_url = $BASE_SEPOLIA_RPC_URL
 signer_private_key = $GENERATED_PRIVATE_KEY
 domain_name = $YOUR_NEW_DOMAIN_NAME
 ```
@@ -70,8 +72,10 @@ verifier_chain_rpc_urls = {
     chain_rpc_59144 = $LINEA_MAINNET_RPC_URL
 }
 contracts = $CONTRACTS_JSON_CONFIG
-app_chain_wss_url = $XMTP_SEPOLIA_RPC_URL
-settlement_chain_wss_url = $BASE_SEPOLIA_RPC_URL
+app_chain_wss_url = $XMTP_SEPOLIA_WSS_URL
+settlement_chain_wss_url = $BASE_SEPOLIA_WSS_URL
+app_chain_rpc_url = $XMTP_SEPOLIA_RPC_URL
+settlement_chain_rpc_url = $BASE_SEPOLIA_RPC_URL
 signer_private_key = $GENERATED_PRIVATE_KEY
 domain_name = $YOUR_NEW_DOMAIN_NAME
 ```

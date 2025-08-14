@@ -51,13 +51,15 @@ To run xmtpd, you need an Alchemy account.
 
 1. See [Create an Alchemy API Key](https://docs.alchemy.com/docs/alchemy-quickstart-guide#1key-create-an-alchemy-api-key) and log in to Alchemy.
 
-2. Go to the [XMTP Chain page](https://dashboard.alchemy.com/chains/xmtp) and set the **Network Status** to ***Enabled***.
+2. Go to the [XMTP Ropsten Chain page](https://dashboard.alchemy.com/chains/xmtp?network=XMTP_ROPSTEN) and set the **Network Status** to ***Enabled***.
 
-3. In the **API URL** column, click **Copy** to copy the XMTP app WebSockets endpoint along with its API key. It should use the format `wss://xmtp-testnet.g.alchemy.com/v2/<apikey>`.
+3. In the **API URL** column, click **Copy** to copy the XMTP app WebSockets endpoint along with its API key. It should use the format `wss://xmtp-ropsten.g.alchemy.com/v2/<apikey>`.
 
 4. You will use this endpoint for the `XMTPD_APP_CHAIN_WSS_URL` config option.
 
-5. Repeat the steps for [Base Sepolia](https://dashboard.alchemy.com/chains/base?network=BASE_SEPOLIA) and set `XMTPD_SETTLEMENT_CHAIN_WSS_URL` to `wss://base-sepolia.g.alchemy.com/v2/<apikey>`.
+5. Repeat for the HTTPs endpoint and set `XMTPD_APP_CHAIN_RPC_URL` to `https://xmtp-ropsten.g.alchemy.com/v2/<apikey>`
+
+5. Repeat the steps for [Base Sepolia](https://dashboard.alchemy.com/chains/base?network=BASE_SEPOLIA) and set both `XMTPD_SETTLEMENT_CHAIN_WSS_URL` to `wss://base-sepolia.g.alchemy.com/v2/<apikey>` and `XMTPD_SETTLEMENT_CHAIN_RPC_URL` to `https://base-sepolia.g.alchemy.com/v2/<apikey>`.
 
 ## Step 2: Register your node
 
@@ -165,6 +167,8 @@ env:
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
     XMTPD_APP_CHAIN_WSS_URL: "wss://xmtp-testnet.g.alchemy.com/v2/<apikey>"
     XMTPD_SETTLEMENT_CHAIN_WSS_URL: "wss://base-sepolia.g.alchemy.com/v2/<apikey>"
+    XMTPD_APP_CHAIN_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
+    XMTPD_SETTLEMENT_CHAIN_RPC_URL: "https://base-sepolia.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
     XMTPD_METRICS_ENABLE: "true"
     XMTPD_REFLECTION_ENABLE: "true"
