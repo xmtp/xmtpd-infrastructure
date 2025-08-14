@@ -165,9 +165,9 @@ env:
   secret:
     XMTPD_DB_WRITER_CONNECTION_STRING: "postgres://<username>:<password>@<host-service>:<port>/<database>?sslmode=disable"
     XMTPD_SIGNER_PRIVATE_KEY: "<private-key>"
-    XMTPD_APP_CHAIN_WSS_URL: "wss://xmtp-testnet.g.alchemy.com/v2/<apikey>"
+    XMTPD_APP_CHAIN_WSS_URL: "wss://xmtp-ropsten.g.alchemy.com/v2/<apikey>"
     XMTPD_SETTLEMENT_CHAIN_WSS_URL: "wss://base-sepolia.g.alchemy.com/v2/<apikey>"
-    XMTPD_APP_CHAIN_RPC_URL: "https://xmtp-testnet.g.alchemy.com/v2/<apikey>"
+    XMTPD_APP_CHAIN_RPC_URL: "https://xmtp-ropsten.g.alchemy.com/v2/<apikey>"
     XMTPD_SETTLEMENT_CHAIN_RPC_URL: "https://base-sepolia.g.alchemy.com/v2/<apikey>"
     XMTPD_MLS_VALIDATION_GRPC_ADDRESS: "http://mls-validation-service.default.svc.cluster.local:50051"
     XMTPD_METRICS_ENABLE: "true"
