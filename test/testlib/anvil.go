@@ -31,7 +31,8 @@ func StartAnvil(t *testing.T, options *helm.Options, namespace string) (string, 
 }
 
 type AnvilCfg struct {
-	Endpoint string
+	WssEndpoint string
+	RPCEndpoint string
 }
 
 type AnvilInstallationStep func(t *testing.T, options *k8s.KubectlOptions)
@@ -56,7 +57,8 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 	})
 
 	anvil := AnvilCfg{
-		Endpoint: fmt.Sprintf("ws://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
+		WssEndpoint: fmt.Sprintf("ws://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
+		RPCEndpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
 	}
 
 	if !awaitRunning {

@@ -27,6 +27,19 @@ variable "xmtpd_prune_docker_image" {
   default     = "ghcr.io/xmtp/xmtpd-prune:latest"
 }
 
+variable "app_chain_rpc_url" {
+  description = "RPC URL for the app blockchain"
+  type        = string
+  sensitive   = true
+}
+
+variable "settlement_chain_rpc_url" {
+  description = "RPC URL for the settlement blockchain"
+  type        = string
+  sensitive   = true
+}
+
+
 variable "app_chain_wss_url" {
   description = "WSS URL for the app blockchain"
   type        = string
