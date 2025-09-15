@@ -1,0 +1,14 @@
+[Unit]
+Description=xmtpd-api
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+EnvironmentFile=/etc/xmtpd.env
+ExecStart=/usr/local/bin/xmtpd --reflection.enable --replication.enable --log.log-level=debug --api.port=5050
+
+[Install]
+WantedBy=multi-user.target
