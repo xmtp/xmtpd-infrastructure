@@ -1,4 +1,4 @@
-# xmtpd infrastructure
+# XMTP Infrastructure
 
 This repository provides infrastructure-as-code examples and tooling to help node operators deploy and manage xmtpd nodes. xmtpd (XMTP daemon) is the node software that powers the testnet and will power the mainnet of the decentralized XMTP network.
 
@@ -7,6 +7,7 @@ This repository provides infrastructure-as-code examples and tooling to help nod
 Each node should be configured for high availability (HA) across all required components, including the database, xmtpd, and the MLS validation service.
 
 Database:
+
 - 2vCPU
 - 8GB RAM
 - Postgres 16.0 or newer
@@ -14,11 +15,13 @@ Database:
 - 250MB/s throughput
 
 xmtpd:
+
 - 2vCPU
 - 2GiB memory
 - 1GB/s network link
 
 MLS validation service:
+
 - 2vCPU
 - 512MiB memory
 
@@ -33,7 +36,7 @@ Choose your infrastructure approach:
 ## Deploy xmtpd to AWS/ECS infrastructure with Terraform
 
 You can use this [Terraform tooling](/terraform/) if you need to provision underlying cloud infrastructure on AWS/ECS.
-   
+
 [XMTPD Terraform Modules](/terraform/README.md) describes how to use Terraform modules to provision AWS/ECS infrastructure for xmtpd nodes.
 
 ## Deploy xmtpd to your infrastructure using Helm charts
@@ -47,8 +50,8 @@ Optionally, if you are using Google Kubernetes Engine, you can run xmtpd on GKE 
 [Deploy xmtpd on Google Kubernetes Engine secured by SSL/TLS](/doc/nginx-cert-gke.md) describes how to secure your deployment with HTTPS and ingress.
 
 ## Monitor xmtpd with Prometheus
-   
-Optionally, you can use Kubernetes and Prometheus to set up observability. 
+
+Optionally, you can use Kubernetes and Prometheus to set up observability.
 
 [Set up Prometheus service discovery for xmtpd in Kubernetes using Helm](/doc/k8s-prometheus-monitoring.md) describes how to automatically scrape metrics from xmtpd pods, visualize in the metrics in Grafana, and set alerts.
 
@@ -60,6 +63,7 @@ To prevent data bloat and keep your node performant, be sure to [prune expired m
 
 - [XMTP documentation](https://docs.xmtp.org)
 - [Decentralizing XMTP](https://xmtp.org/decentralizing-xmtp)
+- [Networking](https://github.com/xmtp/xmtpd/blob/main/doc/networking.md)
 
 ## Contribute
 

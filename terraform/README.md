@@ -22,7 +22,7 @@ Currently only AWS is supported with plans for future support for Google Cloud a
    - ZKSync Mainnet
    - Linea Mainnet
    - XMTP Ropsten
-5. A private key for your node, which can be generated using the instructions in the `xmtpd` repo [here](https://github.com/xmtp/xmtpd/blob/main/doc/onboarding.md)
+5. A private key for your node, which can be generated using the instructions in the `xmtpd` repo [following the onboarding guide](https://github.com/xmtp/xmtpd/blob/main/doc/onboarding.md)
 
 ## Register a domain
 
