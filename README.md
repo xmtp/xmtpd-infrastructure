@@ -1,5 +1,16 @@
 # XMTP Infrastructure
 
+- [XMTP Infrastructure](#xmtp-infrastructure)
+  - [Minimum system requirements](#minimum-system-requirements)
+  - [Get started](#get-started)
+  - [Deploy xmtpd to AWS/ECS infrastructure with Terraform](#deploy-xmtpd-to-awsecs-infrastructure-with-terraform)
+  - [Deploy xmtpd to your infrastructure using Helm charts](#deploy-xmtpd-to-your-infrastructure-using-helm-charts)
+  - [Monitor xmtpd with Prometheus](#monitor-xmtpd-with-prometheus)
+  - [Prune expired messages](#prune-expired-messages)
+  - [Networking notes](#networking-notes)
+  - [Learn more](#learn-more)
+  - [Contribute](#contribute)
+
 This repository provides infrastructure-as-code examples and tooling to help node operators deploy and manage xmtpd nodes. xmtpd (XMTP daemon) is the node software that powers the testnet and will power the mainnet of the decentralized XMTP network.
 
 ## Minimum system requirements
@@ -29,7 +40,7 @@ MLS validation service:
 
 Choose your infrastructure approach:
 
-- Use [Terraform](#provision-awsecs-infrastructure-with-terraform) if you need to provision the underlying cloud infrastructure.
+- Use [Terraform](#deploy-xmtpd-to-awsecs-infrastructure-with-terraform) if you need to provision the underlying cloud infrastructure.
 
 - Use [Helm charts](#deploy-xmtpd-to-your-infrastructure-using-helm-charts) if you have an existing Kubernetes cluster or want to deploy on managed Kubernetes services.
 
@@ -58,6 +69,16 @@ Optionally, you can use Kubernetes and Prometheus to set up observability.
 ## Prune expired messages
 
 To prevent data bloat and keep your node performant, be sure to [prune expired messages from your xmtpd database](/doc/db-pruning.md).
+
+## Networking notes
+
+Refer to the [networking](https://github.com/xmtp/xmtpd/blob/main/doc/networking.md) document to learn more about the networking architecture xmtpd uses.
+
+Currently, xmtpd APIs are implemented using the [Connect-RPC](https://connectrpc.com/) library, which allows gRPC and gRPC-Web clients out of the box.
+
+Because this library uses HTTP2 instead of gRPC, it also relies on requests headers to properly function, including CORS headers.
+
+When using a load balancer in front of xmtpd, make sure it forwards correctly all headers, including CORS.
 
 ## Learn more
 
