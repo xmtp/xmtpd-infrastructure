@@ -72,13 +72,13 @@ To prevent data bloat and keep your node performant, be sure to [prune expired m
 
 ## Networking notes
 
-Refer to the [networking](https://github.com/xmtp/xmtpd/blob/main/doc/networking.md) document to learn more about the networking architecture xmtpd uses.
+To learn more about the networking architecture xmtpd uses, see [XMTP Node Communication APIs](https://github.com/xmtp/xmtpd/blob/main/doc/networking.md) in the xmtpd repo.
 
 Currently, xmtpd APIs are implemented using the [Connect-RPC](https://connectrpc.com/) library, which allows gRPC and gRPC-Web clients out of the box.
 
 Because this library uses HTTP2 instead of gRPC, it also relies on requests headers to properly function, including CORS headers.
 
-When using a load balancer in front of xmtpd, make sure it forwards correctly all headers, including CORS.
+When using a load balancer in front of xmtpd, make sure it correctly forwards all headers, including CORS.
 
 ## Learn more
 
