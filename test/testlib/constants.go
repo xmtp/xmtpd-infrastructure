@@ -1,13 +1,13 @@
 package testlib
 
-const RESULT_DIR = "../../results"
+const ResultDir = "../../results"
 
-const MLS_HELM_CHART_PATH = "../../helm/mls-validation-service"
-const XMTPD_HELM_CHART_PATH = "../../helm/xmtpd"
-const XMTP_PAYER_HELM_CHART_PATH = "../../helm/xmtp-payer"
+const MlsHelmChartPath = "../../helm/mls-validation-service"
+const XmtpdHelmChartPath = "../../helm/xmtpd"
+const XmtpGatewayHelmChartPath = "../../helm/xmtp-gateway"
 
-const K8S_EVENT_LOG_FILE = "kubernetes_event.log"
+const K8sEventLogFile = "kubernetes_event.log"
 
-const ANVIL_DEPLOYMENT_FILE = "../testlib/files/anvil-deployment.yaml"
-const ANVIL_DEPLOYMENT_NAME = "anvil-node"
-const ANVIL_REGISTRATION_NAME = "register-node"
+const AnvilDeploymentFile = "../testlib/files/anvil-deployment.yaml"
+const AnvilDeploymentName = "anvil-node"
+const AnvilRegistrationName = "register-node"

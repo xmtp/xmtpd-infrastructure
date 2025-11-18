@@ -21,3 +21,12 @@ func TestKubernetesAnvil(t *testing.T) {
 	}
 	testlib.StartAnvil(t, &options, "")
 }
+
+func TestKubernetesRedis(t *testing.T) {
+	options := helm.Options{
+		SetValues: map[string]string{
+			"auth.enabled": "false",
+		},
+	}
+	testlib.StartRedis(t, &options, "")
+}

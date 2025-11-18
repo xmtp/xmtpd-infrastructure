@@ -12,7 +12,7 @@ import (
 
 func installMLS(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
-		helm.Install(t, options, MLS_HELM_CHART_PATH, helmChartReleaseName)
+		helm.Install(t, options, MlsHelmChartPath, helmChartReleaseName)
 	} else {
 		helm.Install(t, options, "xmtp/mls-validation-service ", helmChartReleaseName)
 	}

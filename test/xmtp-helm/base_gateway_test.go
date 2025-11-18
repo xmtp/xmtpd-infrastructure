@@ -7,12 +7,13 @@ import (
 	"github.com/xmtp/xmtpd-infrastructure/v1/test/testlib"
 )
 
-func TestKubernetesBasicPayerInstall(t *testing.T) {
-	t.Skip("Replace this with new gateway")
+func TestKubernetesBasicGatewayInstall(t *testing.T) {
 	namespace := testlib.CreateRandomNamespace(t, 2)
 
 	options := helm.Options{
-		SetValues: map[string]string{},
+		SetValues: map[string]string{
+			"auth.enabled": "false",
+		},
 	}
 
 	dbCh := testlib.RunAsync(func() testlib.DB {
@@ -24,18 +25,28 @@ func TestKubernetesBasicPayerInstall(t *testing.T) {
 		return anvil
 	})
 
+	redisCh := testlib.RunAsync(func() testlib.Redis {
+		_, _, redis := testlib.StartRedis(t, &options, namespace)
+		return redis
+	})
+
 	db := <-dbCh
 	anvil := <-anvilCh
+	redis := <-redisCh
 
 	secrets := testlib.GetDefaultSecrets(t)
 	secrets["env.secret.XMTPD_DB_WRITER_CONNECTION_STRING"] = db.ConnString
+	secrets["env.secret.XMTPD_REDIS_URL"] = redis.ConnString
 	secrets["env.secret.XMTPD_SETTLEMENT_CHAIN_WSS_URL"] = anvil.WssEndpoint
 	secrets["env.secret.XMTPD_APP_CHAIN_WSS_URL"] = anvil.WssEndpoint
 	secrets["env.secret.XMTPD_SETTLEMENT_CHAIN_RPC_URL"] = anvil.RPCEndpoint
 	secrets["env.secret.XMTPD_APP_CHAIN_RPC_URL"] = anvil.RPCEndpoint
 
+	//TODO(mkysel) remove after 1.0.0 tag exists
+	secrets["image.tag"] = "sha-a3b0798"
+
 	options = helm.Options{
 		SetValues: secrets,
 	}
-	testlib.StartPayer(t, &options, 1, namespace)
+	testlib.StartGateway(t, &options, 1, namespace)
 }

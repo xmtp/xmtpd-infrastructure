@@ -10,11 +10,11 @@ import (
 )
 
 func installAnvil(t *testing.T, options *k8s.KubectlOptions) {
-	k8s.KubectlApply(t, options, ANVIL_DEPLOYMENT_FILE)
+	k8s.KubectlApply(t, options, AnvilDeploymentFile)
 }
 
 func deleteAnvil(t *testing.T, options *k8s.KubectlOptions) {
-	k8s.KubectlDelete(t, options, ANVIL_DEPLOYMENT_FILE)
+	k8s.KubectlDelete(t, options, AnvilDeploymentFile)
 }
 
 // StartAnvil
@@ -62,20 +62,20 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 	}
 
 	if !awaitRunning {
-		return namespaceName, ANVIL_DEPLOYMENT_NAME, anvil
+		return namespaceName, AnvilDeploymentName, anvil
 	}
 
 	defer func() {
 		// collect some useful diagnostics
 		if t.Failed() {
 			// ignore any errors. This is already failed
-			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", ANVIL_DEPLOYMENT_NAME)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", AnvilDeploymentName)
 		}
 	}()
 
-	AwaitNrReplicasScheduled(t, namespaceName, ANVIL_DEPLOYMENT_NAME, 1)
+	AwaitNrReplicasScheduled(t, namespaceName, AnvilDeploymentName, 1)
 
-	pods := FindPodsFromChart(t, namespaceName, ANVIL_DEPLOYMENT_NAME)
+	pods := FindPodsFromChart(t, namespaceName, AnvilDeploymentName)
 
 	for _, pod := range pods {
 		t.Cleanup(func() {
@@ -89,14 +89,14 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 		})
 	}
 
-	AwaitNrReplicasReady(t, namespaceName, ANVIL_DEPLOYMENT_NAME, 1)
+	AwaitNrReplicasReady(t, namespaceName, AnvilDeploymentName, 1)
 
-	jobPods := FindPodsFromChart(t, namespace, ANVIL_REGISTRATION_NAME)
+	jobPods := FindPodsFromChart(t, namespace, AnvilRegistrationName)
 	require.Len(t, jobPods, 1)
 
 	jobPod := jobPods[0]
 
 	AwaitPodTerminated(t, namespace, jobPod.Name)
 
-	return namespaceName, ANVIL_DEPLOYMENT_NAME, anvil
+	return namespaceName, AnvilDeploymentName, anvil
 }

@@ -32,7 +32,7 @@ var appLogCollectorsWg sync.WaitGroup
 func GetAppLog(t *testing.T, namespace string, podName string, fileNameSuffix string, podLogOptions *corev1.PodLogOptions) string {
 	defer appLogCollectorsWg.Done()
 	appLogCollectorsWg.Add(1)
-	dirPath := filepath.Join(RESULT_DIR, namespace)
+	dirPath := filepath.Join(ResultDir, namespace)
 	filePath := filepath.Join(dirPath, podName+fileNameSuffix+".log")
 
 	_ = os.MkdirAll(dirPath, 0700)
@@ -248,7 +248,7 @@ func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName strin
  * are ready. If the expected number is found within the timeout, the function returns; otherwise, it logs the error.
  */
 func AwaitNrReplicasReady(t *testing.T, namespace string, expectedName string, nrReplicas int) {
-	timeout := 30 * time.Second
+	timeout := 120 * time.Second
 
 	Await(t, func() bool {
 		var cnt int
@@ -426,7 +426,7 @@ func GetTerminatedPodLog(t *testing.T, namespace string, pod *corev1.Pod, fileNa
 		}
 	}
 
-	dirPath := filepath.Join(RESULT_DIR, namespace)
+	dirPath := filepath.Join(ResultDir, namespace)
 	filePath := filepath.Join(dirPath, pod.Name+fileNameSuffix+".log")
 	_ = os.MkdirAll(dirPath, 0700)
 	f, err := os.Create(filePath)

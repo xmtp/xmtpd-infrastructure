@@ -11,17 +11,17 @@ import (
 	"testing"
 )
 
-func installXMTPPayer(t *testing.T, options *helm.Options, helmChartReleaseName string) {
+func installXMTPGateway(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
-		helm.Install(t, options, XMTP_PAYER_HELM_CHART_PATH, helmChartReleaseName)
+		helm.Install(t, options, XmtpGatewayHelmChartPath, helmChartReleaseName)
 	} else {
-		helm.Install(t, options, "xmtp/xmtpd", helmChartReleaseName)
+		helm.Install(t, options, "xmtp/xmtp-gateway", helmChartReleaseName)
 	}
 }
 
-// StartPayer
+// StartGateway
 /**
- * StartPayer starts a XMTP Payer Service using the specified Helm options and namespace.
+ * StartGateway starts a XMTP Gateway Service using the specified Helm options and namespace.
  *
  * @param t *testing.T - The testing context.
  * @param options *helm.Options - The Helm options for the installation.
@@ -29,18 +29,18 @@ func installXMTPPayer(t *testing.T, options *helm.Options, helmChartReleaseName 
  *
  * @return (string, string) - Returns the Helm chart release name and namespace.
  */
-func StartPayer(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string) {
-	return startPayerTemplate(t, options, replicaCount, namespace, "", installXMTPPayer, true)
+func StartGateway(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string) {
+	return startGatewayTemplate(t, options, replicaCount, namespace, "", installXMTPGateway, true)
 }
 
-type PayerInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
+type GatewayInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func startPayerTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep PayerInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
+func startGatewayTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep GatewayInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName = releaseName
 	if helmChartReleaseName == "" {
-		helmChartReleaseName = fmt.Sprintf("xmtp-payer-%s", randomSuffix)
+		helmChartReleaseName = fmt.Sprintf("xmtp-gateway-%s", randomSuffix)
 	}
 
 	if namespace == "" {
@@ -64,19 +64,19 @@ func startPayerTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		return
 	}
 
-	payerDeployment := helmChartReleaseName
+	gatewayDeployment := helmChartReleaseName
 
 	defer func() {
 		// collect some useful diagnostics
 		if t.Failed() {
 			// ignore any errors. This is already failed
-			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", payerDeployment)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", gatewayDeployment)
 		}
 	}()
 
-	AwaitNrReplicasScheduled(t, namespaceName, payerDeployment, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, gatewayDeployment, replicaCount)
 
-	pods := FindPodsFromChart(t, namespaceName, payerDeployment)
+	pods := FindPodsFromChart(t, namespaceName, gatewayDeployment)
 
 	for _, pod := range pods {
 		t.Cleanup(func() {
@@ -90,7 +90,7 @@ func startPayerTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		})
 	}
 
-	AwaitNrReplicasReady(t, namespaceName, payerDeployment, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, gatewayDeployment, replicaCount)
 
 	return
 }

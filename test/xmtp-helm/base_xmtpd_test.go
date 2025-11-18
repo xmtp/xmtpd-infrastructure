@@ -41,6 +41,9 @@ func TestKubernetesBasicXMTPDInstall(t *testing.T) {
 	secrets["env.secret.XMTPD_SETTLEMENT_CHAIN_RPC_URL"] = anvil.RPCEndpoint
 	secrets["env.secret.XMTPD_APP_CHAIN_RPC_URL"] = anvil.RPCEndpoint
 
+	//TODO(mkysel) remove after 1.0.0 tag exists
+	secrets["image.tag"] = "sha-a3b0798"
+
 	options = helm.Options{
 		SetValues: secrets,
 	}

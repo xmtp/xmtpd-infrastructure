@@ -77,8 +77,8 @@ func CreateNamespace(t *testing.T, namespaceName string) {
  *
  */
 func GetK8sEventLog(t *testing.T, namespace string) {
-	dirPath := filepath.Join(RESULT_DIR, namespace)
-	filePath := filepath.Join(dirPath, K8S_EVENT_LOG_FILE)
+	dirPath := filepath.Join(ResultDir, namespace)
+	filePath := filepath.Join(dirPath, K8sEventLogFile)
 
 	_ = os.MkdirAll(dirPath, 0700)
 

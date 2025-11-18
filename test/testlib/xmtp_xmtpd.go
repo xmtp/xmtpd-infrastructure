@@ -13,7 +13,7 @@ import (
 
 func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
-		helm.Install(t, options, XMTPD_HELM_CHART_PATH, helmChartReleaseName)
+		helm.Install(t, options, XmtpdHelmChartPath, helmChartReleaseName)
 	} else {
 		helm.Install(t, options, "xmtp/xmtpd", helmChartReleaseName)
 	}

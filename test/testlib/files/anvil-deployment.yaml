@@ -103,14 +103,13 @@ spec:
           envFrom:
             - configMapRef:
                 name: xmtp-env
-          command: ["/bin/sh", "-c"]
           args:
             - |
-              xmtpd-cli register-node \
-                --http-address="$REGISTER_NODE_HTTP_ADDRESS" \
-                --node-owner-address="$REGISTER_NODE_OWNER_ADDRESS" \
-                --admin.private-key="$REGISTER_NODE_ADMIN_KEY" \
-                --node-signing-key-pub="$REGISTER_NODE_PUBKEY"
+              --private-key="$REGISTER_NODE_ADMIN_KEY" \
+              nodes register \
+              --owner-address="$REGISTER_NODE_OWNER_ADDRESS" \
+              --signing-key-pub="$REGISTER_NODE_PUBKEY" \
+              --http-address="$REGISTER_NODE_HTTP_ADDRESS"
         - name: enable
           image: ghcr.io/xmtp/xmtpd-cli:latest
           env:
@@ -123,9 +122,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: xmtp-env
-          command: [ "/bin/sh", "-c" ]
           args:
             - |
-              xmtpd-cli add-node-to-network \
-                --admin.private-key="$REGISTER_NODE_ADMIN_KEY" \
-                --node-id=100
+              --private-key="$REGISTER_NODE_ADMIN_KEY" \
+              nodes canonical-network \
+              --add \
+              --node-id=100
