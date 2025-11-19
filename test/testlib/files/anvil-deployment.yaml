@@ -13,7 +13,12 @@ spec:
     metadata:
       labels:
         app: anvil
+
     spec:
+      volumes:
+        - name: anvil-config-volume
+          configMap:
+            name: anvil-config
       containers:
         - name: anvil
           image: ghcr.io/xmtp/contracts:0.5.3
@@ -21,6 +26,55 @@ spec:
             - name: anvil-port
               containerPort: 8545
               protocol: TCP
+        - name: register-enable-node
+          image: ghcr.io/xmtp/xmtpd-cli:sha-16c3dd2
+          env:
+            - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
+              value: /etc/xmtp/contracts.json
+          envFrom:
+            - configMapRef:
+                name: xmtp-env
+          volumeMounts:
+            - name: anvil-config-volume
+              mountPath: /etc/xmtp
+              readOnly: true
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              set -e
+              
+              echo "Waiting for Anvil to be reachable on anvil-service:8545..."
+              # naive wait loop; you can make this fancier if needed
+              for i in $(seq 1 60); do
+                if nc -z anvil-service 8545 2>/dev/null; then
+                  echo "Anvil is up"
+                  break
+                fi
+                echo "Anvil not up yet, retrying ($i/60)..."
+                sleep 1
+              done
+              
+              echo "Registering node..."
+              xmtpd-cli \
+                --app-rpc-url="$XMTPD_APP_CHAIN_RPC_URL" \
+                --settlement-rpc-url="$XMTPD_SETTLEMENT_CHAIN_RPC_URL" \
+                --private-key="$REGISTER_NODE_ADMIN_KEY" \
+                nodes register \
+                --owner-address="$REGISTER_NODE_OWNER_ADDRESS" \
+                --signing-key-pub="$REGISTER_NODE_PUBKEY" \
+                --http-address="$REGISTER_NODE_HTTP_ADDRESS"
+              
+              echo "Adding node to canonical network..."
+              xmtpd-cli \
+                --app-rpc-url="$XMTPD_APP_CHAIN_RPC_URL" \
+                --settlement-rpc-url="$XMTPD_SETTLEMENT_CHAIN_RPC_URL" \
+                --private-key="$REGISTER_NODE_ADMIN_KEY" \
+                nodes canonical-network \
+                --add \
+                --node-id=100
+              
+              echo "Node registration + enable complete, exiting sidecar."
+              sleep infinity
 
 ---
 apiVersion: v1
@@ -41,8 +95,8 @@ kind: ConfigMap
 metadata:
   name: xmtp-env
 data:
-  XMTPD_SETTLEMENT_CHAIN_WSS_URL: "ws://anvil-service:8545"
   XMTPD_SETTLEMENT_CHAIN_RPC_URL: "http://anvil-service:8545"
+  XMTPD_APP_CHAIN_RPC_URL: "http://anvil-service:8545"
   REGISTER_NODE_OWNER_ADDRESS: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
   REGISTER_NODE_ADMIN_KEY: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
   REGISTER_NODE_PUBKEY: "0x02ba5734d8f7091719471e7f7ed6b9df170dc70cc661ca05e688601ad984f068b0"
@@ -76,55 +130,4 @@ data:
       "settlementChainParameterRegistry": "0x1aF9c0a400767fA5156F11D125014974517d1b71",
       "underlyingFeeToken": "0x20d28A690751f90Cd24D9EAaCF5dcDBD794fE6A5"
     }
-
 ---
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: register-node
-spec:
-  template:
-    spec:
-      restartPolicy: OnFailure
-      volumes:
-        - name: anvil-config-volume
-          configMap:
-            name: anvil-config
-      containers:
-        - name: register
-          image: ghcr.io/xmtp/xmtpd-cli:latest
-          env:
-            - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
-              value: /etc/xmtp/contracts.json
-          volumeMounts:
-            - name: anvil-config-volume
-              mountPath: /etc/xmtp
-              readOnly: true
-          envFrom:
-            - configMapRef:
-                name: xmtp-env
-          args:
-            - |
-              --private-key="$REGISTER_NODE_ADMIN_KEY" \
-              nodes register \
-              --owner-address="$REGISTER_NODE_OWNER_ADDRESS" \
-              --signing-key-pub="$REGISTER_NODE_PUBKEY" \
-              --http-address="$REGISTER_NODE_HTTP_ADDRESS"
-        - name: enable
-          image: ghcr.io/xmtp/xmtpd-cli:latest
-          env:
-            - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
-              value: /etc/xmtp/contracts.json
-          volumeMounts:
-            - name: anvil-config-volume
-              mountPath: /etc/xmtp
-              readOnly: true
-          envFrom:
-            - configMapRef:
-                name: xmtp-env
-          args:
-            - |
-              --private-key="$REGISTER_NODE_ADMIN_KEY" \
-              nodes canonical-network \
-              --add \
-              --node-id=100

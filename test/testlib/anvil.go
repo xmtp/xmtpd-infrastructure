@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"testing"
 )
@@ -78,25 +77,25 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 	pods := FindPodsFromChart(t, namespaceName, AnvilDeploymentName)
 
 	for _, pod := range pods {
+		p := pod // capture range variable
 		t.Cleanup(func() {
 			if t.Failed() {
-				// dump diagnostic info to test logs
-				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", pod.Name)
+				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", p.Name)
 			}
-			// collect logs
-			go GetAppLog(t, namespaceName, pod.Name, "", &corev1.PodLogOptions{Follow: true})
 
+			for _, c := range p.Spec.Containers {
+				cName := c.Name
+				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+			}
+
+			for _, c := range p.Spec.InitContainers {
+				cName := c.Name
+				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+			}
 		})
 	}
 
 	AwaitNrReplicasReady(t, namespaceName, AnvilDeploymentName, 1)
-
-	jobPods := FindPodsFromChart(t, namespace, AnvilRegistrationName)
-	require.Len(t, jobPods, 1)
-
-	jobPod := jobPods[0]
-
-	AwaitPodTerminated(t, namespace, jobPod.Name)
 
 	return namespaceName, AnvilDeploymentName, anvil
 }

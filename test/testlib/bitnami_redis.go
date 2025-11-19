@@ -79,14 +79,21 @@ func startRedisTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 
 	pods := FindPodsFromChart(t, namespaceName, redisStatefulSet)
 
-	for _, pod := range pods {
+	for _, p := range pods {
 		t.Cleanup(func() {
 			if t.Failed() {
 				// dump diagnostic info to test logs
-				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", pod.Name)
+				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", p.Name)
 			}
-			// collect logs
-			go GetAppLog(t, namespaceName, pod.Name, "", &corev1.PodLogOptions{Follow: true})
+			for _, c := range p.Spec.Containers {
+				cName := c.Name
+				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+			}
+
+			for _, c := range p.Spec.InitContainers {
+				cName := c.Name
+				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+			}
 
 		})
 	}
