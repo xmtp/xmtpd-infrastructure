@@ -35,18 +35,14 @@ jobs:
   go-lint-fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.24
-
-      - name: Verify dependencies
-        run: go mod verify
-
-      - name: Run staticcheck
-        run: go tool staticcheck ./...
+          go-version-file: go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.4.0
   helm-lint:
     runs-on: ubuntu-latest
     steps:
