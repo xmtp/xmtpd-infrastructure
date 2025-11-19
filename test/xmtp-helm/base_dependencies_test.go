@@ -1,8 +1,9 @@
 package xmtp_helm
 
 import (
-	"github.com/gruntwork-io/terratest/modules/helm"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/helm"
 
 	"github.com/xmtp/xmtpd-infrastructure/v1/test/testlib"
 )

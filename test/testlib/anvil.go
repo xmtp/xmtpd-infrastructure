@@ -2,10 +2,11 @@ package testlib
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	corev1 "k8s.io/api/core/v1"
-	"testing"
 )
 
 func installAnvil(t *testing.T, options *k8s.KubectlOptions) {
@@ -25,7 +26,7 @@ func deleteAnvil(t *testing.T, options *k8s.KubectlOptions) {
  * @param namespace string - The namespace for the AnvilCfg node.
  *
  */
-func StartAnvil(t *testing.T, options *helm.Options, namespace string) (string, string, AnvilCfg) {
+func StartAnvil(t *testing.T, options *helm.Options, namespace string) (string, string, *AnvilCfg) {
 	return StartAnvilTemplate(t, options, namespace, installAnvil, true)
 }
 
@@ -36,8 +37,13 @@ type AnvilCfg struct {
 
 type AnvilInstallationStep func(t *testing.T, options *k8s.KubectlOptions)
 
-func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, installStep AnvilInstallationStep, awaitRunning bool) (string, string, AnvilCfg) {
-
+func StartAnvilTemplate(
+	t *testing.T,
+	options *helm.Options,
+	namespace string,
+	installStep AnvilInstallationStep,
+	awaitRunning bool,
+) (string, string, *AnvilCfg) {
 	var namespaceName string
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
@@ -55,9 +61,17 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 		deleteAnvil(t, kubectlOptions)
 	})
 
-	anvil := AnvilCfg{
-		WssEndpoint: fmt.Sprintf("ws://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
-		RPCEndpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:8545", "anvil-service", namespaceName),
+	anvil := &AnvilCfg{
+		WssEndpoint: fmt.Sprintf(
+			"ws://%s.%s.svc.cluster.local:8545",
+			"anvil-service",
+			namespaceName,
+		),
+		RPCEndpoint: fmt.Sprintf(
+			"http://%s.%s.svc.cluster.local:8545",
+			"anvil-service",
+			namespaceName,
+		),
 	}
 
 	if !awaitRunning {
@@ -85,12 +99,24 @@ func StartAnvilTemplate(t *testing.T, options *helm.Options, namespace string, i
 
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 
 			for _, c := range p.Spec.InitContainers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 		})
 	}

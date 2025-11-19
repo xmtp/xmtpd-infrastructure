@@ -2,17 +2,17 @@ package testlib
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 func installRedis(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	helm.Install(t, options, "oci://registry-1.docker.io/bitnamicharts/redis", helmChartReleaseName)
-
 }
 
 // StartRedis
@@ -25,7 +25,7 @@ func installRedis(t *testing.T, options *helm.Options, helmChartReleaseName stri
  *
  * @return (string, string, Redis) - Returns the Helm chart release name, namespace, and Redis connection information.
  */
-func StartRedis(t *testing.T, options *helm.Options, namespace string) (string, string, Redis) {
+func StartRedis(t *testing.T, options *helm.Options, namespace string) (string, string, *Redis) {
 	return startRedisTemplate(t, options, 1, namespace, "redis", installRedis, true)
 }
 
@@ -35,7 +35,15 @@ type Redis struct {
 	ConnString string
 }
 
-func startRedisTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep RedisInstallationStep, awaitRunning bool) (string, string, Redis) {
+func startRedisTemplate(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+	releaseName string,
+	installStep RedisInstallationStep,
+	awaitRunning bool,
+) (string, string, *Redis) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName := releaseName
@@ -60,12 +68,20 @@ func startRedisTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
-	if !awaitRunning {
-		return helmChartReleaseName, namespaceName, Redis{}
+	// bitnami redis cluster does not prepend the release name to the resource names
+	redisStatefulSet := "redis-master"
+
+	redis := &Redis{
+		ConnString: fmt.Sprintf(
+			"redis://%s.%s.svc.cluster.local:6379",
+			redisStatefulSet,
+			namespaceName,
+		),
 	}
 
-	// bitnami redis cluster does not prepend the release name to the resource names
-	redisStatefulSet := fmt.Sprintf("%s", "redis-master")
+	if !awaitRunning {
+		return helmChartReleaseName, namespaceName, redis
+	}
 
 	defer func() {
 		// collect some useful diagnostics
@@ -87,22 +103,29 @@ func startRedisTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 			}
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 
 			for _, c := range p.Spec.InitContainers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
-
 		})
 	}
 
 	AwaitNrReplicasReady(t, namespaceName, redisStatefulSet, replicaCount)
-
-	redis := Redis{
-		ConnString: fmt.Sprintf("redis://%s.%s.svc.cluster.local:6379", redisStatefulSet, namespaceName),
-	}
 
 	return helmChartReleaseName, namespaceName, redis
 }

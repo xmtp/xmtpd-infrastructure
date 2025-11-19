@@ -3,16 +3,18 @@ package testlib
 import (
 	"context"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/gruntwork-io/terratest/modules/random"
-	"github.com/stretchr/testify/require"
 	"io"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/random"
+	"github.com/stretchr/testify/require"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func getFunctionCallerName(depth int) string {
@@ -80,7 +82,7 @@ func GetK8sEventLog(t *testing.T, namespace string) {
 	dirPath := filepath.Join(ResultDir, namespace)
 	filePath := filepath.Join(dirPath, K8sEventLogFile)
 
-	_ = os.MkdirAll(dirPath, 0700)
+	_ = os.MkdirAll(dirPath, 0o700)
 
 	f, err := os.Create(filePath)
 	require.NoError(t, err)

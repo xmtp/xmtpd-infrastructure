@@ -2,10 +2,7 @@ package testlib
 
 import (
 	"context"
-	"github.com/gruntwork-io/terratest/modules/k8s"
-	"github.com/stretchr/testify/require"
 	"io"
-	v1 "k8s.io/api/batch/v1"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,6 +13,11 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/stretchr/testify/require"
+
+	v1 "k8s.io/api/batch/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,13 +31,19 @@ var appLogCollectorsWg sync.WaitGroup
  * GetAppLog retrieves the log output from a specified pod within a Kubernetes namespace and writes it to a file.
  *
  */
-func GetAppLog(t *testing.T, namespace string, podName string, fileNameSuffix string, podLogOptions *corev1.PodLogOptions) string {
+func GetAppLog(
+	t *testing.T,
+	namespace string,
+	podName string,
+	fileNameSuffix string,
+	podLogOptions *corev1.PodLogOptions,
+) string {
 	defer appLogCollectorsWg.Done()
 	appLogCollectorsWg.Add(1)
 	dirPath := filepath.Join(ResultDir, namespace)
 	filePath := filepath.Join(dirPath, podName+fileNameSuffix+".log")
 
-	_ = os.MkdirAll(dirPath, 0700)
+	_ = os.MkdirAll(dirPath, 0o700)
 
 	f, err := os.Create(filePath)
 	require.NoError(t, err)
@@ -61,7 +69,12 @@ func GetAppLog(t *testing.T, namespace string, podName string, fileNameSuffix st
 	return filePath
 }
 
-func getAppLogStreamE(t *testing.T, namespace string, podName string, podLogOptions *corev1.PodLogOptions) (io.ReadCloser, error) {
+func getAppLogStreamE(
+	t *testing.T,
+	namespace string,
+	podName string,
+	podLogOptions *corev1.PodLogOptions,
+) (io.ReadCloser, error) {
 	options := k8s.NewKubectlOptions("", "", namespace)
 
 	client, err := k8s.GetKubernetesClientFromOptionsE(t, options)
@@ -69,7 +82,9 @@ func getAppLogStreamE(t *testing.T, namespace string, podName string, podLogOpti
 
 	if podLogOptions.Container == "" {
 		// Select first container if not specified; otherwise the GetLogs method will fail if there are sidecars
-		pod, err := client.CoreV1().Pods(options.Namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+		pod, err := client.CoreV1().
+			Pods(options.Namespace).
+			Get(context.TODO(), podName, metav1.GetOptions{})
 		require.NoError(t, err)
 
 		container := findXmtpContainer(pod)
@@ -86,21 +101,32 @@ func getAppLogStreamE(t *testing.T, namespace string, podName string, podLogOpti
 			}
 		}
 		if podLogOptions.Previous {
-			t.Logf("Multiple containers found in pod %s. Getting logs from previous container %s.", podName, podLogOptions.Container)
+			t.Logf(
+				"Multiple containers found in pod %s. Getting logs from previous container %s.",
+				podName,
+				podLogOptions.Container,
+			)
 		} else {
 			t.Logf("Multiple containers found in pod %s. Getting logs from container %s.", podName, podLogOptions.Container)
 		}
 	}
 
-	return client.CoreV1().Pods(options.Namespace).GetLogs(podName, podLogOptions).Stream(context.TODO())
+	return client.CoreV1().
+		Pods(options.Namespace).
+		GetLogs(podName, podLogOptions).
+		Stream(context.TODO())
 }
 
-func doesContainerHaveLogs(container *corev1.Container, containerStatuses []corev1.ContainerStatus) bool {
+func doesContainerHaveLogs(
+	container *corev1.Container,
+	containerStatuses []corev1.ContainerStatus,
+) bool {
 	for _, status := range containerStatuses {
 		// check the status of the container; if it is in Waiting state,
 		// then check that it has a non-0 restart count; otherwise the
 		// container has no logs to retrieve
-		if status.Name == container.Name && (status.State.Waiting == nil || status.RestartCount > 0) {
+		if status.Name == container.Name &&
+			(status.State.Waiting == nil || status.RestartCount > 0) {
 			return true
 		}
 	}
@@ -110,7 +136,8 @@ func doesContainerHaveLogs(container *corev1.Container, containerStatuses []core
 func findXmtpContainer(pod *corev1.Pod) *corev1.Container {
 	// look for any container named "xmtp" that has logs
 	for _, container := range pod.Spec.Containers {
-		if (container.Name == "xmtpd") && doesContainerHaveLogs(&container, pod.Status.ContainerStatuses) {
+		if (container.Name == "xmtpd") &&
+			doesContainerHaveLogs(&container, pod.Status.ContainerStatuses) {
 			return &container
 		}
 	}
@@ -141,9 +168,16 @@ func Await(t *testing.T, lmbd func() bool, timeout time.Duration) {
 	for timeExpired := time.After(timeout); ; {
 		select {
 		case <-timeExpired:
-			t.Logf("Function %s timed out", runtime.FuncForPC(reflect.ValueOf(lmbd).Pointer()).Name())
+			t.Logf(
+				"Function %s timed out",
+				runtime.FuncForPC(reflect.ValueOf(lmbd).Pointer()).Name(),
+			)
 			t.Logf("Full stack trace of caller:\n%s", string(debug.Stack()))
-			t.Fatalf("function call timed out after %f seconds. Start of await was '%s'", timeout.Seconds(), now)
+			t.Fatalf(
+				"function call timed out after %f seconds. Start of await was '%s'",
+				timeout.Seconds(),
+				now,
+			)
 		default:
 			if lmbd() {
 				return
@@ -179,7 +213,13 @@ func AwaitNrReplicasCreated(t *testing.T, namespace string, expectedName string,
 			}
 		}
 
-		t.Logf("%d pods CREATED for name '%s': expected=%d, pods=[%s]\n", len(pods), expectedName, nrReplicas, podNames)
+		t.Logf(
+			"%d pods CREATED for name '%s': expected=%d, pods=[%s]\n",
+			len(pods),
+			expectedName,
+			nrReplicas,
+			podNames,
+		)
 
 		return len(pods) == nrReplicas
 	}, timeout)
@@ -206,7 +246,7 @@ func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName strin
 		var podNames string
 		for _, pod := range FindAllPodsInSchema(t, namespace) {
 			if strings.Contains(pod.Name, expectedName) {
-				//ignore all completed pods
+				// ignore all completed pods
 				if pod.Status.Phase == corev1.PodSucceeded {
 					continue
 				}
@@ -222,14 +262,21 @@ func AwaitNrReplicasScheduled(t *testing.T, namespace string, expectedName strin
 					podNames += pod.Name
 
 					// log any pods not in Pending or Running phase
-					if pod.Status.Phase != corev1.PodPending && pod.Status.Phase != corev1.PodRunning {
+					if pod.Status.Phase != corev1.PodPending &&
+						pod.Status.Phase != corev1.PodRunning {
 						t.Logf("Unexpected phase for pod %s: %s", pod.Name, pod.Status.Phase)
 					}
 				}
 			}
 		}
 
-		t.Logf("%d pods SCHEDULED for name '%s': expected=%d, pods=[%s]\n", len(pods), expectedName, nrReplicas, podNames)
+		t.Logf(
+			"%d pods SCHEDULED for name '%s': expected=%d, pods=[%s]\n",
+			len(pods),
+			expectedName,
+			nrReplicas,
+			podNames,
+		)
 
 		return len(pods) == nrReplicas
 	}, timeout)
@@ -303,7 +350,8 @@ func FindAllPodsInSchema(t *testing.T, namespace string) []corev1.Pod {
 }
 
 func arePodConditionsMet(pod *corev1.Pod, condition corev1.PodConditionType,
-	status corev1.ConditionStatus) bool {
+	status corev1.ConditionStatus,
+) bool {
 	for _, cnd := range pod.Status.Conditions {
 		if cnd.Type == condition && cnd.Status == status {
 			return true
@@ -324,7 +372,6 @@ func arePodConditionsMet(pod *corev1.Pod, condition corev1.PodConditionType,
  * @return []corev1.Pod - A slice of pods whose names contain the expected substring.
  */
 func FindPodsFromChart(t *testing.T, namespace string, expectedName string) []corev1.Pod {
-
 	var pods []corev1.Pod
 
 	for _, pod := range FindAllPodsInSchema(t, namespace) {
@@ -349,7 +396,9 @@ func FindAllCronJobsInSchema(t *testing.T, namespace string) []v1.CronJob {
 	clientset, err := k8s.GetKubernetesClientFromOptionsE(t, options)
 	require.NoError(t, err)
 
-	cronJobsList, err := clientset.BatchV1().CronJobs(namespace).List(t.Context(), metav1.ListOptions{})
+	cronJobsList, err := clientset.BatchV1().
+		CronJobs(namespace).
+		List(t.Context(), metav1.ListOptions{})
 	require.NoError(t, err)
 
 	cronJobs := cronJobsList.Items
@@ -373,7 +422,6 @@ func FindAllCronJobsInSchema(t *testing.T, namespace string) []v1.CronJob {
  * @return []v1.CronJob - A slice of CronJobs whose names contain the expected substring.
  */
 func FindCronJobsFromChart(t *testing.T, namespace string, expectedName string) []v1.CronJob {
-
 	var jobs []v1.CronJob
 
 	for _, job := range FindAllCronJobsInSchema(t, namespace) {
@@ -384,7 +432,12 @@ func FindCronJobsFromChart(t *testing.T, namespace string, expectedName string) 
 	return jobs
 }
 
-func CreateJobFromCronJob(t *testing.T, namespace string, cronJob *v1.CronJob, newJobName string) *v1.Job {
+func CreateJobFromCronJob(
+	t *testing.T,
+	namespace string,
+	cronJob *v1.CronJob,
+	newJobName string,
+) *v1.Job {
 	options := k8s.NewKubectlOptions("", "", namespace)
 	clientset, err := k8s.GetKubernetesClientFromOptionsE(t, options)
 	if err != nil {
@@ -401,19 +454,31 @@ func CreateJobFromCronJob(t *testing.T, namespace string, cronJob *v1.CronJob, n
 		Spec: *cronJob.Spec.JobTemplate.Spec.DeepCopy(),
 	}
 
-	createdJob, err := clientset.BatchV1().Jobs(namespace).Create(t.Context(), job, metav1.CreateOptions{})
+	createdJob, err := clientset.BatchV1().
+		Jobs(namespace).
+		Create(t.Context(), job, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	t.Logf("Successfully created Job %s from CronJob %s", newJobName, cronJob.Name)
 	return createdJob
 }
 
-func GetTerminatedPodLog(t *testing.T, namespace string, pod *corev1.Pod, fileNameSuffix string, podLogOptions *corev1.PodLogOptions) string {
+func GetTerminatedPodLog(
+	t *testing.T,
+	namespace string,
+	pod *corev1.Pod,
+	fileNameSuffix string,
+	podLogOptions *corev1.PodLogOptions,
+) string {
 	// Determine if we need previous logs
 	for _, status := range pod.Status.ContainerStatuses {
 		if status.Name == podLogOptions.Container {
 			if status.State.Terminated != nil {
-				t.Logf("Pod %s container %s terminated, retrieving logs.", pod.Name, podLogOptions.Container)
+				t.Logf(
+					"Pod %s container %s terminated, retrieving logs.",
+					pod.Name,
+					podLogOptions.Container,
+				)
 				// Get logs of terminated container (without Previous)
 				podLogOptions.Previous = false
 			} else if status.RestartCount > 0 {
@@ -428,7 +493,7 @@ func GetTerminatedPodLog(t *testing.T, namespace string, pod *corev1.Pod, fileNa
 
 	dirPath := filepath.Join(ResultDir, namespace)
 	filePath := filepath.Join(dirPath, pod.Name+fileNameSuffix+".log")
-	_ = os.MkdirAll(dirPath, 0700)
+	_ = os.MkdirAll(dirPath, 0o700)
 	f, err := os.Create(filePath)
 	require.NoError(t, err)
 	defer func() {
@@ -439,7 +504,10 @@ func GetTerminatedPodLog(t *testing.T, namespace string, pod *corev1.Pod, fileNa
 	client, err := k8s.GetKubernetesClientFromOptionsE(t, options)
 	require.NoError(t, err)
 
-	reader, err := client.CoreV1().Pods(namespace).GetLogs(pod.Name, podLogOptions).Stream(context.TODO())
+	reader, err := client.CoreV1().
+		Pods(namespace).
+		GetLogs(pod.Name, podLogOptions).
+		Stream(context.TODO())
 	require.NoError(t, err)
 	defer func() {
 		_ = reader.Close()

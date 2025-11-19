@@ -2,13 +2,14 @@ package testlib
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName string) {
@@ -18,6 +19,8 @@ func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName stri
 		helm.Install(t, options, "xmtp/xmtpd", helmChartReleaseName)
 	}
 }
+
+type XMTPD struct{}
 
 // StartXMTPD
 /**
@@ -29,24 +32,36 @@ func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName stri
  *
  * @return (string, string) - Returns the Helm chart release name and namespace.
  */
-func StartXMTPD(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string) {
+func StartXMTPD(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+) (string, string, *XMTPD) {
 	return startXMTPDTemplate(t, options, replicaCount, namespace, "", installXMTPD, true)
 }
 
 type XMTPDInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep XMTPDInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
+func startXMTPDTemplate(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+	releaseName string,
+	installStep XMTPDInstallationStep,
+	awaitRunning bool,
+) (string, string, *XMTPD) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
-	helmChartReleaseName = releaseName
+	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
 		helmChartReleaseName = fmt.Sprintf("xmtpd-%s", randomSuffix)
 	}
 
+	namespaceName := namespace
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
-	} else {
-		namespaceName = namespace
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
@@ -60,8 +75,10 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
+	xmtpd := &XMTPD{}
+
 	if !awaitRunning {
-		return
+		return helmChartReleaseName, namespaceName, xmtpd
 	}
 
 	xmtpdDeploymentSync := fmt.Sprintf("%s-sync", helmChartReleaseName)
@@ -76,7 +93,13 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentSync)
 			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentApi)
 			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentIndexer)
-			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentReporting)
+			_ = k8s.RunKubectlE(
+				t,
+				kubectlOptions,
+				"describe",
+				"deployment",
+				xmtpdDeploymentReporting,
+			)
 		}
 	}()
 
@@ -101,14 +124,25 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 			}
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 
 			for _, c := range p.Spec.InitContainers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
-
 		})
 	}
 
@@ -117,5 +151,5 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentIndexer, replicaCount)
 	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentReporting, replicaCount)
 
-	return
+	return helmChartReleaseName, namespaceName, xmtpd
 }

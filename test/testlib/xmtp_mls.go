@@ -2,12 +2,13 @@ package testlib
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 func installMLS(t *testing.T, options *helm.Options, helmChartReleaseName string) {
@@ -28,7 +29,12 @@ func installMLS(t *testing.T, options *helm.Options, helmChartReleaseName string
  *
  * @return (string, string, MLS) - Returns the Helm chart release name, namespace, and MLS connection information.
  */
-func StartMLS(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string, MLS) {
+func StartMLS(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+) (string, string, *MLS) {
 	return StartMLSTemplate(t, options, replicaCount, namespace, "", installMLS, true)
 }
 
@@ -38,18 +44,25 @@ type MLS struct {
 
 type MLSInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func StartMLSTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep MLSInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string, mls MLS) {
+func StartMLSTemplate(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+	releaseName string,
+	installStep MLSInstallationStep,
+	awaitRunning bool,
+) (string, string, *MLS) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
-	helmChartReleaseName = releaseName
+	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
 		helmChartReleaseName = fmt.Sprintf("mls-%s", randomSuffix)
 	}
 
+	namespaceName := namespace
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
-	} else {
-		namespaceName = namespace
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
@@ -62,11 +75,15 @@ func StartMLSTemplate(t *testing.T, options *helm.Options, replicaCount int, nam
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
-	if !awaitRunning {
-		return
+	mlsDeployment := fmt.Sprintf("%s-%s", helmChartReleaseName, "mls-validation-service")
+
+	mls := &MLS{
+		Endpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:50051", mlsDeployment, namespaceName),
 	}
 
-	mlsDeployment := fmt.Sprintf("%s-%s", helmChartReleaseName, "mls-validation-service")
+	if !awaitRunning {
+		return helmChartReleaseName, namespaceName, mls
+	}
 
 	defer func() {
 		// collect some useful diagnostics
@@ -88,22 +105,29 @@ func StartMLSTemplate(t *testing.T, options *helm.Options, replicaCount int, nam
 			}
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 
 			for _, c := range p.Spec.InitContainers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
-
 		})
-	}
-
-	mls = MLS{
-		Endpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:50051", mlsDeployment, namespaceName),
 	}
 
 	AwaitNrReplicasReady(t, namespaceName, mlsDeployment, replicaCount)
 
-	return
+	return helmChartReleaseName, namespaceName, mls
 }

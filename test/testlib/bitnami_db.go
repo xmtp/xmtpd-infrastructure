@@ -2,17 +2,22 @@ package testlib
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 func installDB(t *testing.T, options *helm.Options, helmChartReleaseName string) {
-	helm.Install(t, options, "oci://registry-1.docker.io/bitnamicharts/postgresql", helmChartReleaseName)
-
+	helm.Install(
+		t,
+		options,
+		"oci://registry-1.docker.io/bitnamicharts/postgresql",
+		helmChartReleaseName,
+	)
 }
 
 // StartDB
@@ -25,7 +30,7 @@ func installDB(t *testing.T, options *helm.Options, helmChartReleaseName string)
  *
  * @return (string, string, DB) - Returns the Helm chart release name, namespace, and DB connection information.
  */
-func StartDB(t *testing.T, options *helm.Options, namespace string) (string, string, DB) {
+func StartDB(t *testing.T, options *helm.Options, namespace string) (string, string, *DB) {
 	return startDBTemplate(t, options, 1, namespace, "pg", installDB, true)
 }
 
@@ -36,18 +41,25 @@ type DB struct {
 	ConnString string
 }
 
-func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep DBInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string, db DB) {
+func startDBTemplate(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+	releaseName string,
+	installStep DBInstallationStep,
+	awaitRunning bool,
+) (string, string, *DB) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
-	helmChartReleaseName = releaseName
+	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
 		helmChartReleaseName = fmt.Sprintf("pg-%s", randomSuffix)
 	}
 
+	namespaceName := namespace
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
-	} else {
-		namespaceName = namespace
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
@@ -61,7 +73,7 @@ func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, name
 	})
 
 	if !awaitRunning {
-		return
+		return helmChartReleaseName, namespaceName, nil
 	}
 
 	dbStatefulSet := fmt.Sprintf("%s-%s", helmChartReleaseName, "postgresql")
@@ -86,14 +98,25 @@ func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, name
 			}
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 
 			for _, c := range p.Spec.InitContainers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
-
 		})
 	}
 
@@ -101,12 +124,17 @@ func startDBTemplate(t *testing.T, options *helm.Options, replicaCount int, name
 
 	AwaitNrReplicasReady(t, namespaceName, dbStatefulSet, replicaCount)
 
-	db = DB{
-		Password:   pwd,
-		ConnString: fmt.Sprintf("postgres://postgres:%s@%s.%s.svc.cluster.local:5432/postgres?sslmode=disable", pwd, dbStatefulSet, namespaceName),
+	db := &DB{
+		Password: pwd,
+		ConnString: fmt.Sprintf(
+			"postgres://postgres:%s@%s.%s.svc.cluster.local:5432/postgres?sslmode=disable",
+			pwd,
+			dbStatefulSet,
+			namespaceName,
+		),
 	}
 
-	return
+	return helmChartReleaseName, namespaceName, db
 }
 
 func getPGPwd(t *testing.T, namespace string, secretName string) string {

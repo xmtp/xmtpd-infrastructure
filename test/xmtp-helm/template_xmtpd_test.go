@@ -1,34 +1,45 @@
 package xmtp_helm
 
 import (
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/assert"
 	"github.com/xmtp/xmtpd-infrastructure/v1/test/testlib"
 	v1 "k8s.io/api/batch/v1"
 	netv1 "k8s.io/api/networking/v1"
-	"testing"
 )
 
 func TestXmtpdEmpty(t *testing.T) {
 	options := &helm.Options{
 		SetValues: map[string]string{},
 	}
-	output := helm.RenderTemplate(t, options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+	output := helm.RenderTemplate(
+		t,
+		options,
+		testlib.XmtpdHelmChartPath,
+		"release-name",
+		[]string{},
+	)
 
 	ingress := testlib.ExtractIngressE(t, output)
 	assert.Nil(t, ingress)
-
 }
 
 func TestXmtpdEnableIngress(t *testing.T) {
-
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"ingress.create": "true",
 		},
 	}
 
-	output := helm.RenderTemplate(t, options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+	output := helm.RenderTemplate(
+		t,
+		options,
+		testlib.XmtpdHelmChartPath,
+		"release-name",
+		[]string{},
+	)
 
 	ingress := testlib.ExtractIngress(t, output)
 	assert.Contains(t, ingress.Annotations, "kubernetes.io/ingress.class")
@@ -36,7 +47,6 @@ func TestXmtpdEnableIngress(t *testing.T) {
 }
 
 func TestXmtpdIngressTLSNoSecret(t *testing.T) {
-
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"ingress.create":         "true",
@@ -44,7 +54,13 @@ func TestXmtpdIngressTLSNoSecret(t *testing.T) {
 		},
 	}
 
-	output := helm.RenderTemplate(t, options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+	output := helm.RenderTemplate(
+		t,
+		options,
+		testlib.XmtpdHelmChartPath,
+		"release-name",
+		[]string{},
+	)
 
 	ingress := testlib.ExtractIngress(t, output)
 	assert.Contains(t, ingress.Annotations, "cert-manager.io/cluster-issuer")
@@ -53,7 +69,6 @@ func TestXmtpdIngressTLSNoSecret(t *testing.T) {
 }
 
 func TestXmtpdIngressTLSSecretNoCreate(t *testing.T) {
-
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"ingress.create":         "true",
@@ -63,7 +78,13 @@ func TestXmtpdIngressTLSSecretNoCreate(t *testing.T) {
 		},
 	}
 
-	output := helm.RenderTemplate(t, options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+	output := helm.RenderTemplate(
+		t,
+		options,
+		testlib.XmtpdHelmChartPath,
+		"release-name",
+		[]string{},
+	)
 
 	ingress := testlib.ExtractIngress(t, output)
 	assert.Contains(t, ingress.Annotations, "cert-manager.io/cluster-issuer")
@@ -80,24 +101,34 @@ func TestXmtpdIngressTLSSecretNoCreate(t *testing.T) {
 }
 
 func TestXmtpdNoEnvWorks(t *testing.T) {
-
 	options := &helm.Options{}
 
-	output := helm.RenderTemplate(t, options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+	output := helm.RenderTemplate(
+		t,
+		options,
+		testlib.XmtpdHelmChartPath,
+		"release-name",
+		[]string{},
+	)
 	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtpd")
 
 	assert.NotNil(t, deployment)
 }
 
 func TestXmtpdEnvWorks(t *testing.T) {
-
 	options := &helm.Options{
 		SetValues: map[string]string{
 			"env.secret.XMTPD_LOG_LEVEL": "debug",
 		},
 	}
 
-	output := helm.RenderTemplate(t, options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+	output := helm.RenderTemplate(
+		t,
+		options,
+		testlib.XmtpdHelmChartPath,
+		"release-name",
+		[]string{},
+	)
 	deployment := testlib.ExtractDeployment(t, output, "release-name-xmtpd")
 
 	assert.NotNil(t, deployment)
@@ -173,7 +204,13 @@ func TestXmtpdPruneCreate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			output := helm.RenderTemplate(t, tt.options, testlib.XmtpdHelmChartPath, "release-name", []string{})
+			output := helm.RenderTemplate(
+				t,
+				tt.options,
+				testlib.XmtpdHelmChartPath,
+				"release-name",
+				[]string{},
+			)
 			cronjob := testlib.ExtractCronJobE(t, output, "release-name-xmtpd-prune")
 			if !tt.exists {
 				assert.Nil(t, cronjob)

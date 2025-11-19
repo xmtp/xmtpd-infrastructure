@@ -2,13 +2,14 @@ package testlib
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 func installXMTPGateway(t *testing.T, options *helm.Options, helmChartReleaseName string) {
@@ -17,6 +18,10 @@ func installXMTPGateway(t *testing.T, options *helm.Options, helmChartReleaseNam
 	} else {
 		helm.Install(t, options, "xmtp/xmtp-gateway", helmChartReleaseName)
 	}
+}
+
+type Gateway struct {
+	Endpoint string
 }
 
 // StartGateway
@@ -29,24 +34,36 @@ func installXMTPGateway(t *testing.T, options *helm.Options, helmChartReleaseNam
  *
  * @return (string, string) - Returns the Helm chart release name and namespace.
  */
-func StartGateway(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string) {
+func StartGateway(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+) (string, string, *Gateway) {
 	return startGatewayTemplate(t, options, replicaCount, namespace, "", installXMTPGateway, true)
 }
 
 type GatewayInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func startGatewayTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep GatewayInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
+func startGatewayTemplate(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+	releaseName string,
+	installStep GatewayInstallationStep,
+	awaitRunning bool,
+) (string, string, *Gateway) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
-	helmChartReleaseName = releaseName
+	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
 		helmChartReleaseName = fmt.Sprintf("xmtp-gateway-%s", randomSuffix)
 	}
 
+	namespaceName := namespace
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
-	} else {
-		namespaceName = namespace
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
@@ -60,11 +77,19 @@ func startGatewayTemplate(t *testing.T, options *helm.Options, replicaCount int,
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
-	if !awaitRunning {
-		return
+	gatewayDeployment := helmChartReleaseName
+
+	gw := &Gateway{
+		Endpoint: fmt.Sprintf(
+			"http://%s.%s.svc.cluster.local:8080",
+			gatewayDeployment,
+			namespaceName,
+		),
 	}
 
-	gatewayDeployment := helmChartReleaseName
+	if !awaitRunning {
+		return helmChartReleaseName, namespaceName, gw
+	}
 
 	defer func() {
 		// collect some useful diagnostics
@@ -87,18 +112,29 @@ func startGatewayTemplate(t *testing.T, options *helm.Options, replicaCount int,
 
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
 
 			for _, c := range p.Spec.InitContainers {
 				cName := c.Name
-				go GetAppLog(t, namespaceName, p.Name, cName, &corev1.PodLogOptions{Follow: true, Container: cName})
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
 			}
-
 		})
 	}
 
 	AwaitNrReplicasReady(t, namespaceName, gatewayDeployment, replicaCount)
 
-	return
+	return helmChartReleaseName, namespaceName, gw
 }
