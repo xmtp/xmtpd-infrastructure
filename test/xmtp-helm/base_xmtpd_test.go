@@ -87,7 +87,7 @@ func TestKubernetesXMTPDCronJob(t *testing.T) {
 
 	// TODO(mkysel) remove after 1.0.0 tag exists
 	secrets["image.tag"] = "sha-16c3dd2"
-	secrets["prune.image.tag"] = "sha-16c3dd2	"
+	secrets["prune.image.tag"] = "sha-16c3dd2"
 
 	options = helm.Options{
 		SetValues: secrets,
