@@ -1,6 +1,7 @@
-# XMTPD Terraform Modules
+# xmtpd Terraform modules
 
-**⚠️ Experimental:** This software is in early development. Expect frequent changes and unresolved issues.
+> [!WARNING]
+> This software is **experimental** and in early development. Expect frequent changes and unresolved issues.
 
 `xmtpd` (XMTP daemon) is an experimental version of XMTP node software. It is **not** the node software that currently forms the XMTP network.
 
@@ -8,7 +9,7 @@ This repository includes Terraform modules that can be used as part of a new or 
 
 Currently only AWS is supported with plans for future support for Google Cloud and other hosting providers.
 
-## Pre-requisites
+## Prerequisites
 
 1. An AWS account
 2. An IAM user in that account with privileges to add and remove a wide range of infrastructure (the built-in Administrator policy will work, or you can make a more tailored policy if desired)
@@ -22,7 +23,7 @@ Currently only AWS is supported with plans for future support for Google Cloud a
    - ZKSync Mainnet
    - Linea Mainnet
    - XMTP Ropsten
-5. A private key for your node, which can be generated using the instructions in the `xmtpd` repo [here](https://github.com/xmtp/xmtpd/blob/main/doc/onboarding.md)
+5. A private key for your node, which can be generated using the instructions in the [onboarding guide](https://github.com/xmtp/xmtpd/blob/main/doc/onboarding.md) in the `xmtpd` repo.
 
 ## Register a domain
 
