@@ -7,57 +7,58 @@ import (
 
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
 )
 
-func installMLS(t *testing.T, options *helm.Options, helmChartReleaseName string) {
+func installXMTPGateway(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
-		helm.Install(t, options, MlsHelmChartPath, helmChartReleaseName)
+		helm.Install(t, options, XmtpGatewayHelmChartPath, helmChartReleaseName)
 	} else {
-		helm.Install(t, options, "xmtp/mls-validation-service ", helmChartReleaseName)
+		helm.Install(t, options, "xmtp/xmtp-gateway", helmChartReleaseName)
 	}
 }
 
-// StartMLS
+type Gateway struct {
+	Endpoint string
+}
+
+// StartGateway
 /**
- * StartMLS starts a MLS Validation Service using the specified Helm options and namespace.
+ * StartGateway starts a XMTP Gateway Service using the specified Helm options and namespace.
  *
  * @param t *testing.T - The testing context.
  * @param options *helm.Options - The Helm options for the installation.
- * @param namespace string - The namespace for the MLS Validation Service.
+ * @param namespace string - The namespace for the service.
  *
- * @return (string, string, MLS) - Returns the Helm chart release name, namespace, and MLS connection information.
+ * @return (string, string) - Returns the Helm chart release name and namespace.
  */
-func StartMLS(
+func StartGateway(
 	t *testing.T,
 	options *helm.Options,
 	replicaCount int,
 	namespace string,
-) (string, string, *MLS) {
-	return StartMLSTemplate(t, options, replicaCount, namespace, "", installMLS, true)
+) (string, string, *Gateway) {
+	return startGatewayTemplate(t, options, replicaCount, namespace, "", installXMTPGateway, true)
 }
 
-type MLS struct {
-	Endpoint string
-}
+type GatewayInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-type MLSInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
-
-func StartMLSTemplate(
+func startGatewayTemplate(
 	t *testing.T,
 	options *helm.Options,
 	replicaCount int,
 	namespace string,
 	releaseName string,
-	installStep MLSInstallationStep,
+	installStep GatewayInstallationStep,
 	awaitRunning bool,
-) (string, string, *MLS) {
+) (string, string, *Gateway) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
-		helmChartReleaseName = fmt.Sprintf("mls-%s", randomSuffix)
+		helmChartReleaseName = fmt.Sprintf("xmtp-gateway-%s", randomSuffix)
 	}
 
 	namespaceName := namespace
@@ -68,6 +69,7 @@ func StartMLSTemplate(
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
 	options.KubectlOptions = kubectlOptions
 	options.KubectlOptions.Namespace = namespaceName
+	options.Logger = logger.Discard
 
 	installStep(t, options, helmChartReleaseName)
 
@@ -75,27 +77,31 @@ func StartMLSTemplate(
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
-	mlsDeployment := fmt.Sprintf("%s-%s", helmChartReleaseName, "mls-validation-service")
+	gatewayDeployment := helmChartReleaseName
 
-	mls := &MLS{
-		Endpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:50051", mlsDeployment, namespaceName),
+	gw := &Gateway{
+		Endpoint: fmt.Sprintf(
+			"http://%s.%s.svc.cluster.local:8080",
+			gatewayDeployment,
+			namespaceName,
+		),
 	}
 
 	if !awaitRunning {
-		return helmChartReleaseName, namespaceName, mls
+		return helmChartReleaseName, namespaceName, gw
 	}
 
 	defer func() {
 		// collect some useful diagnostics
 		if t.Failed() {
 			// ignore any errors. This is already failed
-			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", mlsDeployment)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", gatewayDeployment)
 		}
 	}()
 
-	AwaitNrReplicasScheduled(t, namespaceName, mlsDeployment, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, gatewayDeployment, replicaCount)
 
-	pods := FindPodsFromChart(t, namespaceName, mlsDeployment)
+	pods := FindPodsFromChart(t, namespaceName, gatewayDeployment)
 
 	for _, p := range pods {
 		t.Cleanup(func() {
@@ -103,6 +109,7 @@ func StartMLSTemplate(
 				// dump diagnostic info to test logs
 				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", p.Name)
 			}
+
 			for _, c := range p.Spec.Containers {
 				cName := c.Name
 				go GetAppLog(
@@ -127,7 +134,7 @@ func StartMLSTemplate(
 		})
 	}
 
-	AwaitNrReplicasReady(t, namespaceName, mlsDeployment, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, gatewayDeployment, replicaCount)
 
-	return helmChartReleaseName, namespaceName, mls
+	return helmChartReleaseName, namespaceName, gw
 }

@@ -11,58 +11,51 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func installMLS(t *testing.T, options *helm.Options, helmChartReleaseName string) {
-	if options.Version == "" {
-		helm.Install(t, options, MlsHelmChartPath, helmChartReleaseName)
-	} else {
-		helm.Install(t, options, "xmtp/mls-validation-service ", helmChartReleaseName)
-	}
+func installRedis(t *testing.T, options *helm.Options, helmChartReleaseName string) {
+	helm.Install(t, options, "oci://registry-1.docker.io/bitnamicharts/redis", helmChartReleaseName)
 }
 
-// StartMLS
+// StartRedis
 /**
- * StartMLS starts a MLS Validation Service using the specified Helm options and namespace.
+ * StartRedis starts a Redis cluster using the specified Helm options and namespace.
  *
  * @param t *testing.T - The testing context.
  * @param options *helm.Options - The Helm options for the installation.
- * @param namespace string - The namespace for the MLS Validation Service.
+ * @param namespace string - The namespace for the Redis pod.
  *
- * @return (string, string, MLS) - Returns the Helm chart release name, namespace, and MLS connection information.
+ * @return (string, string, Redis) - Returns the Helm chart release name, namespace, and Redis connection information.
  */
-func StartMLS(
-	t *testing.T,
-	options *helm.Options,
-	replicaCount int,
-	namespace string,
-) (string, string, *MLS) {
-	return StartMLSTemplate(t, options, replicaCount, namespace, "", installMLS, true)
+func StartRedis(t *testing.T, options *helm.Options, namespace string) (string, string, *Redis) {
+	return startRedisTemplate(t, options, 1, namespace, "redis", installRedis, true)
 }
 
-type MLS struct {
-	Endpoint string
+type RedisInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
+
+type Redis struct {
+	ConnString string
 }
 
-type MLSInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
-
-func StartMLSTemplate(
+func startRedisTemplate(
 	t *testing.T,
 	options *helm.Options,
 	replicaCount int,
 	namespace string,
 	releaseName string,
-	installStep MLSInstallationStep,
+	installStep RedisInstallationStep,
 	awaitRunning bool,
-) (string, string, *MLS) {
+) (string, string, *Redis) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
 	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
-		helmChartReleaseName = fmt.Sprintf("mls-%s", randomSuffix)
+		helmChartReleaseName = fmt.Sprintf("redis-%s", randomSuffix)
 	}
 
-	namespaceName := namespace
+	var namespaceName string
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
+	} else {
+		namespaceName = namespace
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
@@ -75,27 +68,32 @@ func StartMLSTemplate(
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
-	mlsDeployment := fmt.Sprintf("%s-%s", helmChartReleaseName, "mls-validation-service")
+	// bitnami redis cluster does not prepend the release name to the resource names
+	redisStatefulSet := "redis-master"
 
-	mls := &MLS{
-		Endpoint: fmt.Sprintf("http://%s.%s.svc.cluster.local:50051", mlsDeployment, namespaceName),
+	redis := &Redis{
+		ConnString: fmt.Sprintf(
+			"redis://%s.%s.svc.cluster.local:6379",
+			redisStatefulSet,
+			namespaceName,
+		),
 	}
 
 	if !awaitRunning {
-		return helmChartReleaseName, namespaceName, mls
+		return helmChartReleaseName, namespaceName, redis
 	}
 
 	defer func() {
 		// collect some useful diagnostics
 		if t.Failed() {
 			// ignore any errors. This is already failed
-			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", mlsDeployment)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "statefulset", redisStatefulSet)
 		}
 	}()
 
-	AwaitNrReplicasScheduled(t, namespaceName, mlsDeployment, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, redisStatefulSet, replicaCount)
 
-	pods := FindPodsFromChart(t, namespaceName, mlsDeployment)
+	pods := FindPodsFromChart(t, namespaceName, redisStatefulSet)
 
 	for _, p := range pods {
 		t.Cleanup(func() {
@@ -127,7 +125,7 @@ func StartMLSTemplate(
 		})
 	}
 
-	AwaitNrReplicasReady(t, namespaceName, mlsDeployment, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, redisStatefulSet, replicaCount)
 
-	return helmChartReleaseName, namespaceName, mls
+	return helmChartReleaseName, namespaceName, redis
 }

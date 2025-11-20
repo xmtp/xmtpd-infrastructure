@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "xmtpd.fullname" . }}-sync
+  name: {{ include "xmtp-gateway.fullname" . }}
   labels:
-    {{- include "xmtpd.labels" . | nindent 4 }}
+    {{- include "xmtp-gateway.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "xmtpd.selectorLabels" . | nindent 6 }}
+      {{- include "xmtp-gateway.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -16,30 +16,29 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "xmtpd.labels" . | nindent 8 }}
+        {{- include "xmtp-gateway.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        app.kubernetes.io/role: xmtpd-server-sync
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "xmtpd.serviceAccountName" . }}
+      serviceAccountName: {{ include "xmtp-gateway.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
         - name: contracts-config-volume
           configMap:
-            name: {{ .Values.contractsConfig.configMapName | default (printf "%s-contracts-config" (include "xmtpd.fullname" .)) }}
+            name: {{ .Values.contractsConfig.configMapName | default (printf "%s-contracts-config" (include "xmtp-gateway.fullname" .)) }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args: ["--sync.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0" ]
+          args: ["--metrics.enable", "--metrics.metrics-address=0.0.0.0"]
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
               value: /etc/xmtp/contracts.json
@@ -47,20 +46,19 @@ spec:
             {{ include "helpers.list-env-variables" . | indent 12 }}
           {{- end }}
           ports:
+            - name: grpc
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
             - name: metrics
               containerPort: 8008
-          readinessProbe:
-            httpGet:
-              path: /metrics
-              port: 8008
-              scheme: HTTP
+          startupProbe:
+            grpc:
+              port: {{ .Values.service.targetPort }}
             failureThreshold: 3
             periodSeconds: 10
           livenessProbe:
-            httpGet:
-              path: /metrics
-              port: 8008
-              scheme: HTTP
+            grpc:
+              port: {{ .Values.service.targetPort }}
             failureThreshold: 3
             periodSeconds: 10
           resources:
@@ -81,3 +79,8 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1

@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "xmtpd.fullname" . }}-sync
+  name: {{ include "xmtpd.fullname" . }}-reporting
   labels:
     {{- include "xmtpd.labels" . | nindent 4 }}
 spec:
@@ -20,7 +20,7 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        app.kubernetes.io/role: xmtpd-server-sync
+        app.kubernetes.io/role: xmtpd-server-reporting
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -39,7 +39,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          args: ["--sync.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0" ]
+          args: ["--payer-report.enable", "--metrics.enable", "--metrics.metrics-address=0.0.0.0" ]
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
               value: /etc/xmtp/contracts.json

@@ -2,22 +2,25 @@ package testlib
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/gruntwork-io/terratest/modules/k8s"
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/random"
 	corev1 "k8s.io/api/core/v1"
-	"strings"
-	"testing"
 )
 
 func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName string) {
 	if options.Version == "" {
-		helm.Install(t, options, XMTPD_HELM_CHART_PATH, helmChartReleaseName)
+		helm.Install(t, options, XmtpdHelmChartPath, helmChartReleaseName)
 	} else {
 		helm.Install(t, options, "xmtp/xmtpd", helmChartReleaseName)
 	}
 }
+
+type XMTPD struct{}
 
 // StartXMTPD
 /**
@@ -29,24 +32,36 @@ func installXMTPD(t *testing.T, options *helm.Options, helmChartReleaseName stri
  *
  * @return (string, string) - Returns the Helm chart release name and namespace.
  */
-func StartXMTPD(t *testing.T, options *helm.Options, replicaCount int, namespace string) (string, string) {
+func StartXMTPD(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+) (string, string, *XMTPD) {
 	return startXMTPDTemplate(t, options, replicaCount, namespace, "", installXMTPD, true)
 }
 
 type XMTPDInstallationStep func(t *testing.T, options *helm.Options, helmChartReleaseName string)
 
-func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, namespace string, releaseName string, installStep XMTPDInstallationStep, awaitRunning bool) (helmChartReleaseName string, namespaceName string) {
+func startXMTPDTemplate(
+	t *testing.T,
+	options *helm.Options,
+	replicaCount int,
+	namespace string,
+	releaseName string,
+	installStep XMTPDInstallationStep,
+	awaitRunning bool,
+) (string, string, *XMTPD) {
 	randomSuffix := strings.ToLower(random.UniqueId())
 
-	helmChartReleaseName = releaseName
+	helmChartReleaseName := releaseName
 	if helmChartReleaseName == "" {
 		helmChartReleaseName = fmt.Sprintf("xmtpd-%s", randomSuffix)
 	}
 
+	namespaceName := namespace
 	if namespace == "" {
 		namespaceName = CreateRandomNamespace(t, 4)
-	} else {
-		namespaceName = namespace
 	}
 
 	kubectlOptions := k8s.NewKubectlOptions("", "", namespaceName)
@@ -60,12 +75,16 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 		helm.Delete(t, options, helmChartReleaseName, true)
 	})
 
+	xmtpd := &XMTPD{}
+
 	if !awaitRunning {
-		return
+		return helmChartReleaseName, namespaceName, xmtpd
 	}
 
 	xmtpdDeploymentSync := fmt.Sprintf("%s-sync", helmChartReleaseName)
 	xmtpdDeploymentApi := fmt.Sprintf("%s-api", helmChartReleaseName)
+	xmtpdDeploymentIndexer := fmt.Sprintf("%s-indexer", helmChartReleaseName)
+	xmtpdDeploymentReporting := fmt.Sprintf("%s-reporting", helmChartReleaseName)
 
 	defer func() {
 		// collect some useful diagnostics
@@ -73,30 +92,64 @@ func startXMTPDTemplate(t *testing.T, options *helm.Options, replicaCount int, n
 			// ignore any errors. This is already failed
 			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentSync)
 			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentApi)
+			_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "deployment", xmtpdDeploymentIndexer)
+			_ = k8s.RunKubectlE(
+				t,
+				kubectlOptions,
+				"describe",
+				"deployment",
+				xmtpdDeploymentReporting,
+			)
 		}
 	}()
 
 	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeploymentSync, replicaCount)
 	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeploymentApi, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeploymentIndexer, replicaCount)
+	AwaitNrReplicasScheduled(t, namespaceName, xmtpdDeploymentReporting, replicaCount)
 
 	podsSync := FindPodsFromChart(t, namespaceName, xmtpdDeploymentSync)
 	podsApi := FindPodsFromChart(t, namespaceName, xmtpdDeploymentApi)
+	podsIndexer := FindPodsFromChart(t, namespaceName, xmtpdDeploymentIndexer)
+	podsReporting := FindPodsFromChart(t, namespaceName, xmtpdDeploymentReporting)
 
 	allPods := append(podsSync, podsApi...)
-	for _, pod := range allPods {
+	allPods = append(allPods, podsIndexer...)
+	allPods = append(allPods, podsReporting...)
+	for _, p := range allPods {
 		t.Cleanup(func() {
 			if t.Failed() {
 				// dump diagnostic info to test logs
-				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", pod.Name)
+				_ = k8s.RunKubectlE(t, kubectlOptions, "describe", "pod", p.Name)
 			}
-			// collect logs
-			go GetAppLog(t, namespaceName, pod.Name, "", &corev1.PodLogOptions{Follow: true})
+			for _, c := range p.Spec.Containers {
+				cName := c.Name
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
+			}
 
+			for _, c := range p.Spec.InitContainers {
+				cName := c.Name
+				go GetAppLog(
+					t,
+					namespaceName,
+					p.Name,
+					cName,
+					&corev1.PodLogOptions{Follow: true, Container: cName},
+				)
+			}
 		})
 	}
 
 	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentSync, replicaCount)
 	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentApi, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentIndexer, replicaCount)
+	AwaitNrReplicasReady(t, namespaceName, xmtpdDeploymentReporting, replicaCount)
 
-	return
+	return helmChartReleaseName, namespaceName, xmtpd
 }
