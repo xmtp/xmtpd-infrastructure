@@ -1,0 +1,10 @@
+#!/bin/bash
+
+docker run --rm -d \
+  --name xmtpd-systemd \
+  --privileged \
+  --cgroupns=host \
+  --tmpfs /run \
+  --tmpfs /run/lock \
+  -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
+  xmtpd-systemd

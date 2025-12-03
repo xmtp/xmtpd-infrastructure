@@ -7,7 +7,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-EnvironmentFile=/etc/xmtpd.env
+EnvironmentFile=/etc/xmtpd/xmtpd.env
 ExecStart=/usr/local/bin/xmtpd-prune
 
 [Install]
