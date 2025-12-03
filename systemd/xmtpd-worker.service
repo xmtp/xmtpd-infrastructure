@@ -1,0 +1,14 @@
+[Unit]
+Description=xmtpd-worker
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+EnvironmentFile=/etc/xmtpd.env
+ExecStart=/usr/local/bin/xmtpd --indexer.enable --sync.enable --api.port=5060 --api.http-port=5065
+
+[Install]
+WantedBy=multi-user.target
