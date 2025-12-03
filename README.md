@@ -7,34 +7,35 @@
   - [Deploy xmtpd to your infrastructure using Helm charts](#deploy-xmtpd-to-your-infrastructure-using-helm-charts)
   - [Monitor xmtpd with Prometheus](#monitor-xmtpd-with-prometheus)
   - [Prune expired messages](#prune-expired-messages)
+  - [Security protocols](#security-protocols)
   - [Networking notes](#networking-notes)
   - [Learn more](#learn-more)
   - [Contribute](#contribute)
 
 This repository provides infrastructure-as-code examples and tooling to help node operators deploy and manage xmtpd nodes. xmtpd (XMTP daemon) is the node software that powers the testnet and will power the mainnet of the decentralized XMTP network.
 
-## Minimum system requirements
-
-Each node should be configured for high availability (HA) across all required components, including the database, xmtpd, and the MLS validation service.
-
-Database:
-
-- 2vCPU
-- 8GB RAM
-- Postgres 16.0 or newer
-- 20ms commit latency
-- 250MB/s throughput
-
-xmtpd:
-
-- 2vCPU
-- 2GiB memory
-- 1GB/s network link
-
-MLS validation service:
-
-- 2vCPU
-- 512MiB memory
+## Minimum system requirements 
+ 
+Each node should be configured for high availability (HA) across all required components, including the database, xmtpd, and the MLS validation service. 
+ 
+Database: 
+ 
+- 2vCPU 
+- 8GB RAM 
+- Postgres 16.0 or newer 
+- 20ms commit latency 
+- 250MB/s throughput 
+ 
+xmtpd: 
+ 
+- 2vCPU 
+- 2GiB memory 
+- 1GB/s network link 
+ 
+MLS validation service: 
+ 
+- 2vCPU 
+- 512MiB memory 
 
 ## Get started
 
@@ -60,15 +61,31 @@ Optionally, if you are using Google Kubernetes Engine, you can run xmtpd on GKE 
 
 [Deploy xmtpd on Google Kubernetes Engine secured by SSL/TLS](/doc/nginx-cert-gke.md) describes how to secure your deployment with HTTPS and ingress.
 
-## Monitor xmtpd with Prometheus
+## Security protocols
 
-Optionally, you can use Kubernetes and Prometheus to set up observability.
+Node operators must implement robust security protocols across all layers of their deployment. The following practices are recommended for production environments:
 
-[Set up Prometheus service discovery for xmtpd in Kubernetes using Helm](/doc/k8s-prometheus-monitoring.md) describes how to automatically scrape metrics from xmtpd pods, visualize in the metrics in Grafana, and set alerts.
+- **Transport Layer Security (TLS)**: Enforce TLS for all external communications with automated certificate management. See [TLS configuration for Kubernetes](/doc/nginx-cert-gke.md) or [AWS load balancer TLS configuration](/terraform/aws/xmtpd-api/load-balancer.tf).
 
-## Prune expired messages
+- **Secrets management**: Use platform-native secret stores with appropriate access controls. See examples: [Kubernetes Secrets](/helm/xmtpd/templates/secret.yaml) for database credentials and signing keys, or [AWS Secrets Manager integration](/terraform/aws/fargate-task-definition/main.tf) for ECS deployments.
 
-To prevent data bloat and keep your node performant, be sure to [prune expired messages from your xmtpd database](/doc/db-pruning.md).
+- **Network segmentation**: Deploy databases in private subnets with security group rules restricting access to VPC CIDR blocks only. See [AWS RDS security group configuration](/terraform/examples/aws-complete/rds.tf) and [API security groups](/terraform/aws/xmtpd-api/security-groups.tf).
+
+- **Access control**: Implement least-privilege IAM roles and Kubernetes service accounts with granular permissions. See [ECS task execution role](/terraform/aws/fargate-task-definition/main.tf) and [Kubernetes service accounts](/helm/xmtpd/templates/serviceaccount.yaml).
+
+- **Private key protection**: Securely generate and store node signing keys in secrets management systems and register keys with blockchain before deployment. Keys stored as `XMTPD_SIGNER_PRIVATE_KEY` in [Kubernetes Secrets](/helm/xmtpd/templates/secret.yaml) or AWS Secrets Manager.
+
+- **Database security**: Use managed PostgreSQL with SSL connections, automated backups, and deletion protection. See [Aurora PostgreSQL configuration](/terraform/examples/aws-complete/rds.tf).
+
+- **Pod security standards**: Configure security contexts with read-only root filesystems, drop unnecessary Linux capabilities, and run as non-root users. See security context examples in [xmtpd values](/helm/xmtpd/values.yaml).
+
+- **Health monitoring and alerting**: Deploy Prometheus-based monitoring with service discovery and health checks. See [Prometheus setup guide](/doc/k8s-prometheus-monitoring.md) to learn how to automatically scrape metrics from xmtpd pods using PodMonitor, visualize metrics in Grafana, and set alerts.
+
+- **High availability and updates**: Deploy services across multiple availability zones. See [AWS multi-AZ Aurora](/terraform/examples/aws-complete/rds.tf) and [Kubernetes deployment strategies](/helm/xmtp-gateway/templates/deployment.yaml).
+
+## Performance and operations
+
+- **Data retention and pruning**: Implement automated database pruning to prevent data bloat and maintain node performance. See [database pruning guide](/doc/db-pruning.md) and [prune CronJob configuration](/helm/xmtpd/templates/prune-cronjob.yaml) for details.
 
 ## Networking notes
 
