@@ -81,8 +81,6 @@ Node operators must implement robust security protocols across all layers of the
 
 - **Health monitoring and alerting**: Deploy Prometheus-based monitoring with service discovery and health checks. See [Prometheus setup guide](/doc/k8s-prometheus-monitoring.md) to learn how to automatically scrape metrics from xmtpd pods using PodMonitor, visualize metrics in Grafana, and set alerts.
 
-- **High availability and updates**: Deploy services across multiple availability zones. See [AWS multi-AZ Aurora](/terraform/examples/aws-complete/rds.tf) and [Kubernetes deployment strategies](/helm/xmtp-gateway/templates/deployment.yaml).
-
 ## Performance and operations
 
 - **Data retention and pruning**: Implement automated database pruning to prevent data bloat and maintain node performance. See [database pruning guide](/doc/db-pruning.md) and [prune CronJob configuration](/helm/xmtpd/templates/prune-cronjob.yaml) for details.
