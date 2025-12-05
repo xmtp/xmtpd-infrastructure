@@ -7,8 +7,8 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-EnvironmentFile=/etc/xmtpd.env
-ExecStart=/usr/local/bin/xmtpd --indexer.enable --sync.enable --api.port=5060 --api.http-port=5065
+EnvironmentFile=/etc/xmtpd/xmtpd.env
+ExecStart=/usr/local/bin/xmtpd --indexer.enable --sync.enable --payer-report.enable --contracts.config-file-path=/etc/xmtpd/testnet.json
 
 [Install]
 WantedBy=multi-user.target

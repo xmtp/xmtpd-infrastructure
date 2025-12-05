@@ -7,8 +7,8 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-EnvironmentFile=/etc/xmtpd.env
-ExecStart=/usr/local/bin/xmtpd --reflection.enable --replication.enable --log.log-level=debug --api.port=5050
+EnvironmentFile=/etc/xmtpd/xmtpd.env
+ExecStart=/usr/local/bin/xmtpd --reflection.enable --api.enable --log.log-level=debug --api.port=5050 --contracts.config-file-path=/etc/xmtpd/testnet.json
 
 [Install]
 WantedBy=multi-user.target
