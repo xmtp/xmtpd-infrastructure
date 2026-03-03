@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
-
 	"github.com/xmtp/xmtpd-infrastructure/v1/test/testlib"
 )
 

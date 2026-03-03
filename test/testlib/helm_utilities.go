@@ -107,7 +107,11 @@ func getAppLogStreamE(
 				podLogOptions.Container,
 			)
 		} else {
-			t.Logf("Multiple containers found in pod %s. Getting logs from container %s.", podName, podLogOptions.Container)
+			t.Logf(
+				"Multiple containers found in pod %s. Getting logs from container %s.",
+				podName,
+				podLogOptions.Container,
+			)
 		}
 	}
 
@@ -482,10 +486,18 @@ func GetTerminatedPodLog(
 				// Get logs of terminated container (without Previous)
 				podLogOptions.Previous = false
 			} else if status.RestartCount > 0 {
-				t.Logf("Pod %s container %s restarted, retrieving previous logs.", pod.Name, podLogOptions.Container)
+				t.Logf(
+					"Pod %s container %s restarted, retrieving previous logs.",
+					pod.Name,
+					podLogOptions.Container,
+				)
 				podLogOptions.Previous = true
 			} else {
-				t.Fatalf("Pod %s container %s is not terminated, current state unknown", pod.Name, podLogOptions.Container)
+				t.Fatalf(
+					"Pod %s container %s is not terminated, current state unknown",
+					pod.Name,
+					podLogOptions.Container,
+				)
 			}
 			break
 		}
