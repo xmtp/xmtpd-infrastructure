@@ -1,15 +1,15 @@
 # CORS and client routing
 
-The **XMTP node** (xmtpd) uses **ConnectRPC** which supports both native **gRPC** (HTTP/2) and **gRPC-Web** (HTTP/1.1) protocols. 
+The **XMTP node** (xmtpd) uses **ConnectRPC** which supports both native **gRPC** (HTTP/2) and **gRPC-Web** (HTTP/1.1) protocols.
 
 To properly serve all client types—including native mobile/desktop apps, browser-based WASM clients, and web applications—your load balancer must route traffic appropriately and allow CORS preflight requests (OPTIONS requests) to reach the backend.
 
 ## Protocol requirements
 
-| Client type | Protocol | Content-Type | Notes |
-| --- | --- | --- | --- |
-| Native gRPC (mobile, CLI, server) | `HTTP/2` | `application/grpc` | Requires HTTP/2 end-to-end |
-| gRPC-Web / WASM (browser JS) | `HTTP/1.1` | `application/grpc-web` `application/grpc-web+proto*` `application/grpc-web-text*` `application/grpc-web-text+proto*` | Uses `x-grpc-web: 1` header |
+| Client type                       | Protocol   | Content-Type                                                                                                         | Notes                       |
+| --------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| Native gRPC (mobile, CLI, server) | `HTTP/2`   | `application/grpc`                                                                                                   | Requires HTTP/2 end-to-end  |
+| gRPC-Web / WASM (browser JS)      | `HTTP/1.1` | `application/grpc-web` `application/grpc-web+proto*` `application/grpc-web-text*` `application/grpc-web-text+proto*` | Uses `x-grpc-web: 1` header |
 
 ## Load balancer configuration
 
