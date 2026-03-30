@@ -44,6 +44,12 @@ variable "service_secrets" {
   })
 }
 
+variable "db_name" {
+  description = "Override the database name (XMTPD_DB_NAME_OVERRIDE). When empty, xmtpd uses the database name from the connection string."
+  type        = string
+  default     = ""
+}
+
 variable "enable_debug_logs" {
   description = "Enable debug logs for XMTPD server"
 }

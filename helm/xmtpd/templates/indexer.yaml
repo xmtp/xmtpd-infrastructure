@@ -43,6 +43,8 @@ spec:
           env:
             - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
               value: /etc/xmtp/contracts.json
+            - name: XMTPD_DB_NAME_OVERRIDE
+              value: {{ .Values.databaseName }}
           {{- if (include "helpers.list-env-variables" .) }}
             {{ include "helpers.list-env-variables" . | indent 12 }}
           {{- end }}

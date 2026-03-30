@@ -5,6 +5,7 @@ locals {
     "GOLOG_LOG_FMT"               = "json"
     "XMTPD_LOG_ENCODING"          = "json"
     "XMTPD_CONTRACTS_CONFIG_JSON" = var.service_config.contracts_config
+    "XMTPD_DB_NAME_OVERRIDE"      = var.db_name
   }
 
   xmtp_secrets = {
