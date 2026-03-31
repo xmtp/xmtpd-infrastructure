@@ -34,6 +34,7 @@ module "api_task_definition" {
     "GOLOG_LOG_FMT"                     = "json"
     "XMTPD_MLS_VALIDATION_GRPC_ADDRESS" = var.service_config.validation_service_grpc_address
     "XMTPD_CONTRACTS_CONFIG_JSON"       = var.service_config.contracts_config
+    "XMTPD_DB_NAME_OVERRIDE"            = var.db_name
   }
 
   secrets = {

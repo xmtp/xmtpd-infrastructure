@@ -85,6 +85,11 @@ secret:
 
 contractsConfig: {}
 
+# Override the database name used by all xmtpd services.
+# When empty, xmtpd uses the database name from the connection string.
+# Set this to migrate away from the legacy auto-generated xmtpd_<sha> name.
+databaseName: ""
+
 env:
   secret: {}
 

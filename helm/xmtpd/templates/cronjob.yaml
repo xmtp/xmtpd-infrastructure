@@ -39,7 +39,7 @@ spec:
                 - name: XMTPD_CONTRACTS_CONFIG_FILE_PATH
                   value: /etc/xmtp/contracts.json
                 - name: XMTPD_DB_NAME_OVERRIDE
-                  value: {{ .Values.prune.databaseName }}
+                  value: {{ .Values.prune.databaseName | default .Values.databaseName | quote }}
                 {{ include "helpers.list-env-variables" . | indent 16 }}
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
