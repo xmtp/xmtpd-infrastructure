@@ -52,19 +52,24 @@ Per-call cost is sub-linear in the amount of work requested:
 - `QueryEnvelopes` / `SubscribeTopics` cost `ceil(sqrt(numTopics))` tokens.
 - `GetInboxIds` and `GetNewestEnvelope` cost 1 token.
 
-`SubscribeTopics` has an extra `opens-per-minute` sub-limit and a
-retrospective drain: long-lived streams pay tokens at close time based on
-how long they were held, so a client that opens a subscription and sits on
-it for hours will eventually be throttled from opening new ones.
+`SubscribeTopics` has an extra `opens-per-minute` sub-limit to prevent
+open-and-immediately-close abuse, but **iteration 1 does not bill
+long-held streams**. A 24/7 bot that successfully opens a subscription
+is not penalized further for holding it open. This is intentional —
+continual drain and stream lifetime caps were originally scoped into
+this feature, then cut during review because they were hostile to
+well-behaved bots on quiet topics. That work is tracked in
+[xmtp/xmtpd#1957](https://github.com/xmtp/xmtpd/issues/1957).
 
 ### What happens when a client is over budget
 
 - Unary calls return gRPC `ResourceExhausted` (`connect.CodeResourceExhausted`).
-- Subscription opens return the same error **before** any catch-up is done.
-- Live subscriptions are also force-closed after either
-  `XMTPD_RATE_LIMIT_STREAM_IDLE_TIMEOUT` of silence or
-  `XMTPD_RATE_LIMIT_STREAM_MAX_DURATION` wall-clock lifetime, whichever
-  comes first.
+- Subscription opens return the same error **before** any catch-up is
+  done, either because the query bucket is empty or because the IP has
+  hit its `opens-per-minute` sub-limit.
+- Live subscriptions are **not** force-closed based on time. Once the
+  open succeeds, the stream runs until the client disconnects or the
+  server shuts down.
 
 ### What happens when Redis goes away
 
@@ -137,28 +142,12 @@ prefer flags.
 Both query-bucket limits must have tokens for a call to be allowed. The
 hour bucket exists to catch slow burns that slip under the minute bucket.
 
-### Subscription drain
-
-| Variable | Default | Description |
-|---|---|---|
-| `XMTPD_RATE_LIMIT_DRAIN_INTERVAL_MINUTES` | `5` | Minutes per drain interval. A held stream is billed `DRAIN_AMOUNT` tokens for every interval (or partial interval) it was open at close time. |
-| `XMTPD_RATE_LIMIT_DRAIN_AMOUNT` | `1` | Tokens per drain interval. |
-
-With defaults, a stream held for one hour pays `ceil(60/5) * 1 = 12`
-retrospective tokens against the query bucket at close. A client that
-sits on 100 subscribe streams for an hour will blow through the per-hour
-bucket.
-
-### Stream lifetime
-
-| Variable | Default | Description |
-|---|---|---|
-| `XMTPD_RATE_LIMIT_STREAM_IDLE_TIMEOUT` | `15m` | Cancel a `SubscribeTopics` stream that has had no envelope activity for this long. |
-| `XMTPD_RATE_LIMIT_STREAM_MAX_DURATION` | `60m` | Hard cap on subscription stream lifetime regardless of activity. |
-
-Both timers are disabled when set to `0`. Leaving them at the defaults
-means well-behaved clients reconnect every hour, which is safer than
-letting goroutines and Redis state accumulate indefinitely.
+> **Deferred:** iteration 1 does not provide subscription drain or stream
+> lifetime caps. The `XMTPD_RATE_LIMIT_DRAIN_*` and
+> `XMTPD_RATE_LIMIT_STREAM_*` variables from earlier drafts of this doc
+> do not exist in the released binary. Continual billing of long-held
+> subscribe streams is tracked in
+> [xmtp/xmtpd#1957](https://github.com/xmtp/xmtpd/issues/1957).
 
 ### Circuit breaker
 
@@ -256,7 +245,6 @@ The subsystem exposes four metrics on the regular `/metrics` endpoint:
 | `xmtpd_rate_limit_decisions_total` | Counter | `service`, `method`, `tier`, `outcome` | Every decision the interceptor makes. `outcome` is one of `allowed`, `denied`, `bypassed`, `failed_open`. |
 | `xmtpd_rate_limit_circuit_breaker_state` | Gauge | — | `0` = closed (healthy), `1` = half-open (probing), `2` = open (Redis unreachable, failing open). |
 | `xmtpd_rate_limit_circuit_breaker_trips_total` | Counter | — | How many times the breaker has tripped. A non-zero increment means Redis had a bad moment. |
-| `xmtpd_rate_limit_stream_terminations_total` | Counter | `reason` | Why subscribe streams closed: `client_close`, `server_close`, `idle`, `max_duration`. |
 
 Useful alerts:
 
@@ -266,9 +254,6 @@ Useful alerts:
   slow and your node is fail-open.
 - `sum by (method) (rate(xmtpd_rate_limit_decisions_total{outcome="denied"}[5m]))` —
   which method is bearing the brunt of denials.
-- `rate(xmtpd_rate_limit_stream_terminations_total{reason="max_duration"}[5m])` —
-  a burst here means clients are holding streams past the max. Either the
-  max is too tight or the client is misbehaving.
 
 ### 3. Manual smoke test
 
@@ -315,12 +300,12 @@ roughly 60 successful calls in the first minute.
   by `ServerAuthInterceptor`.** If you replace or disable the auth
   interceptor, every request becomes Tier 2. Keep them wired up together.
 
-- **The drain is retrospective, not live.** A client that opens a stream
-  and immediately holds it burns opens-per-minute tokens at open time
-  and query-bucket tokens at close time. The query bucket can go
-  *negative*, and the client will be denied new work until it refills.
-  The debt persists in Redis until paid off — the TTL is sized to cover
-  the full refill-from-debt period.
+- **Long-held subscribe streams are not billed after admission.** A client
+  that successfully opens a subscription and holds it for hours pays
+  nothing beyond the admission cost at open time. If that turns out to
+  matter for your workload, follow
+  [xmtp/xmtpd#1957](https://github.com/xmtp/xmtpd/issues/1957) — that's
+  where continual per-stream billing is being designed.
 
 ## Turning it off
 
