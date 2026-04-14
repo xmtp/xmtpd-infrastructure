@@ -1,33 +1,40 @@
-# Tutorial: Protect your xmtpd QueryApi with rate limits
+# Tutorial: Protect your xmtpd node with rate limits
 
 xmtpd ships with an optional, Redis-backed rate limiter that protects the
-read-path `QueryApi` from noisy or abusive edge clients. As a node operator,
-you are responsible for deciding whether to enable it and for sizing the
-buckets to match your traffic.
+read-path `QueryApi` from noisy or abusive edge clients, and a concurrent
+stream limiter that caps per-IP `SubscribeAllEnvelopes` connections on the
+`NotificationApi`. As a node operator, you are responsible for deciding
+whether to enable them and for sizing the limits to match your traffic.
 
-This guide walks you through what the rate limiter does, how to turn it on,
-and how to tune it safely.
+This guide walks you through what the limiters do, how to turn them on,
+and how to tune them safely.
 
 Tracking issue: [xmtp/xmtpd-infrastructure#60](https://github.com/xmtp/xmtpd-infrastructure/issues/60).
-Implementation: [xmtp/xmtpd#1938](https://github.com/xmtp/xmtpd/pull/1938).
+Implementation: [xmtp/xmtpd#1938](https://github.com/xmtp/xmtpd/pull/1938),
+[xmtp/xmtpd#1962](https://github.com/xmtp/xmtpd/pull/1962).
 
 ## What gets rate-limited
 
-The rate limiter wraps the **QueryApi** service only:
+Two interceptors are wired up when rate limiting is enabled:
+
+**QueryApi rate limiter** — per-IP token buckets on:
 
 - `QueryEnvelopes`
 - `SubscribeTopics`
 - `GetInboxIds`
 - `GetNewestEnvelope`
 
+**NotificationApi stream limiter** — per-IP concurrent stream cap on:
+
+- `SubscribeAllEnvelopes`
+
 The following traffic is **not** rate-limited by this subsystem:
 
 - `ReplicationApi` — node-to-node traffic, authenticated separately.
 - `PublishApi` — payer-authenticated writes, billed on-chain.
-- `NotificationApi` — internal fan-out.
 - `MetadataApi` — operator and observability endpoints.
 
-If your workload has hot spots outside `QueryApi`, you need a different
+If your workload has hot spots outside these services, you need a different
 control (nginx `limit_req`, a CDN-level rule, etc.).
 
 ## How the limiter decides
@@ -67,9 +74,26 @@ well-behaved bots on quiet topics. That work is tracked in
 - Subscription opens return the same error **before** any catch-up is
   done, either because the query bucket is empty or because the IP has
   hit its `opens-per-minute` sub-limit.
-- Live subscriptions are **not** force-closed based on time. Once the
-  open succeeds, the stream runs until the client disconnects or the
-  server shuts down.
+- Live `SubscribeTopics` subscriptions are **not** force-closed based
+  on time. Once the open succeeds, the stream runs until the client
+  disconnects or the server shuts down.
+
+### Concurrent stream limit (SubscribeAllEnvelopes)
+
+`SubscribeAllEnvelopes` on the `NotificationApi` is protected by a
+separate **concurrent stream limiter**. Instead of a token bucket, it
+enforces a hard cap on how many streams a single IP may hold open at
+once (default: 2). Like the QueryApi limiter, Tier 0 peers bypass the
+check entirely.
+
+The stream count is tracked in Redis with a configurable TTL. If a
+node crashes without calling `Release`, the Redis key expires after
+`XMTPD_RATE_LIMIT_STREAM_TTL` (default 15 m), self-healing the
+counter. While a stream is alive, the node refreshes the TTL every
+`XMTPD_RATE_LIMIT_STREAM_REFRESH_INTERVAL` (default 5 m).
+
+When a client exceeds the concurrent limit, the new stream is rejected
+with gRPC `ResourceExhausted` before any data is sent.
 
 ### What happens when Redis goes away
 
@@ -142,12 +166,13 @@ prefer flags.
 Both query-bucket limits must have tokens for a call to be allowed. The
 hour bucket exists to catch slow burns that slip under the minute bucket.
 
-> **Deferred:** iteration 1 does not provide subscription drain or stream
-> lifetime caps. The `XMTPD_RATE_LIMIT_DRAIN_*` and
-> `XMTPD_RATE_LIMIT_STREAM_*` variables from earlier drafts of this doc
-> do not exist in the released binary. Continual billing of long-held
-> subscribe streams is tracked in
-> [xmtp/xmtpd#1957](https://github.com/xmtp/xmtpd/issues/1957).
+### Concurrent stream limits
+
+| Variable | Default | Description |
+|---|---|---|
+| `XMTPD_RATE_LIMIT_T1_MAX_CONCURRENT_SUBSCRIBE_ALL` | `2` | Maximum concurrent `SubscribeAllEnvelopes` streams per IP. Applies to Tier 2 only; Tier 0 peers bypass. |
+| `XMTPD_RATE_LIMIT_STREAM_TTL` | `15m` | Redis key TTL for stream counters. Acts as a crash self-heal window — if a node dies without releasing, the key expires and the slot is freed. |
+| `XMTPD_RATE_LIMIT_STREAM_REFRESH_INTERVAL` | `5m` | How often the node refreshes the stream counter TTL while a stream is alive. Must be less than `STREAM_TTL`. |
 
 ### Circuit breaker
 
@@ -202,10 +227,16 @@ env:
   - name: XMTPD_RATE_LIMIT_TRUSTED_PROXY_CIDRS
     value: "10.0.0.0/8"           # cluster pod CIDR — tune to your cluster
   - name: XMTPD_RATE_LIMIT_T2_PER_MINUTE_CAPACITY
-    value: "120"                  # higher; we front-run a CDN
+    value: "2000"                 # NAT-friendly; handles ~200 devices at 10 req/device/min
   - name: XMTPD_RATE_LIMIT_T2_PER_HOUR_CAPACITY
-    value: "3000"
+    value: "50000"                # tighter than 2000*60 to catch moderate-rate scrapers
+  - name: XMTPD_RATE_LIMIT_T2_SUBSCRIBE_OPENS_PER_MINUTE
+    value: "200"                  # headroom for reconnect storms behind NAT
 ```
+
+These bucket sizes match what XMTP uses internally — they are tuned for
+environments where many devices share a single IP behind corporate NAT
+or event Wi-Fi.
 
 Put the Redis URL in a Secret, not a ConfigMap — if you ever use `rediss://`
 with an AUTH token, the URL is credentials.
@@ -230,7 +261,7 @@ XMTPD_RATE_LIMIT_T2_SUBSCRIBE_OPENS_PER_MINUTE=10000
 With rate limiting enabled, xmtpd logs an enable line at boot:
 
 ```
-rate limit interceptor enabled  t2_per_minute=60  t2_per_hour=1200  t2_subscribe_opens_per_minute=10
+rate limit interceptor enabled  t2_per_minute=60  t2_per_hour=1200  t2_subscribe_opens_per_minute=10  t1_max_concurrent_streams=2  stream_ttl=15m0s  stream_refresh_interval=5m0s
 ```
 
 If you do not see that line, `XMTPD_RATE_LIMIT_ENABLE` was not parsed as
@@ -238,13 +269,15 @@ true.
 
 ### 2. Prometheus metrics
 
-The subsystem exposes four metrics on the regular `/metrics` endpoint:
+The subsystem exposes five metrics on the regular `/metrics` endpoint:
 
 | Metric | Type | Labels | Meaning |
 |---|---|---|---|
-| `xmtpd_rate_limit_decisions_total` | Counter | `service`, `method`, `tier`, `outcome` | Every decision the interceptor makes. `outcome` is one of `allowed`, `denied`, `bypassed`, `failed_open`. |
+| `xmtpd_rate_limit_decisions_total` | Counter | `service`, `method`, `tier`, `outcome` | Every QueryApi decision. `outcome` is one of `allowed`, `denied`, `bypassed`, `failed_open`. |
 | `xmtpd_rate_limit_circuit_breaker_state` | Gauge | — | `0` = closed (healthy), `1` = half-open (probing), `2` = open (Redis unreachable, failing open). |
 | `xmtpd_rate_limit_circuit_breaker_trips_total` | Counter | — | How many times the breaker has tripped. A non-zero increment means Redis had a bad moment. |
+| `xmtpd_stream_limit_decisions_total` | Counter | `service`, `outcome` | Every SubscribeAllEnvelopes stream decision. `outcome` is one of `allowed`, `denied`, `bypassed`, `failed_open`. |
+| `xmtpd_stream_limit_active_streams` | Gauge | — | Number of active streams tracked by this process (local count, not Redis). |
 
 Useful alerts:
 
@@ -253,7 +286,9 @@ Useful alerts:
 - `xmtpd_rate_limit_circuit_breaker_state != 0 for 1m` — Redis is down or
   slow and your node is fail-open.
 - `sum by (method) (rate(xmtpd_rate_limit_decisions_total{outcome="denied"}[5m]))` —
-  which method is bearing the brunt of denials.
+  which QueryApi method is bearing the brunt of denials.
+- `rate(xmtpd_stream_limit_decisions_total{outcome="denied"}[5m]) > 0` —
+  clients hitting the concurrent stream cap on `SubscribeAllEnvelopes`.
 
 ### 3. Manual smoke test
 
@@ -300,12 +335,20 @@ roughly 60 successful calls in the first minute.
   by `ServerAuthInterceptor`.** If you replace or disable the auth
   interceptor, every request becomes Tier 2. Keep them wired up together.
 
-- **Long-held subscribe streams are not billed after admission.** A client
-  that successfully opens a subscription and holds it for hours pays
-  nothing beyond the admission cost at open time. If that turns out to
-  matter for your workload, follow
+- **Long-held `SubscribeTopics` streams are not billed after admission.**
+  A client that successfully opens a `SubscribeTopics` subscription and
+  holds it for hours pays nothing beyond the admission cost at open time.
+  If that turns out to matter for your workload, follow
   [xmtp/xmtpd#1957](https://github.com/xmtp/xmtpd/issues/1957) — that's
   where continual per-stream billing is being designed.
+
+- **`SubscribeAllEnvelopes` uses a concurrent count, not a token bucket.**
+  The stream limiter counts how many streams a single IP holds open —
+  it is not time-windowed. If a node crashes, the Redis key self-heals
+  after `XMTPD_RATE_LIMIT_STREAM_TTL` (default 15 m). Until then, the
+  crashed node's slots appear occupied. Keep the TTL short enough that
+  a restart recovers quickly, but long enough that the refresh interval
+  has time to fire.
 
 ## Turning it off
 
